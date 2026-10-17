@@ -757,6 +757,17 @@ what a destructive tool mutates on disk and needs its own proposal and its own
 adversarial pass. Keeping them exact is what makes the scanner swap a pure
 performance change with an empty behaviour delta.
 
+**Markdown move targets are URL-decoded exactly once before resolution**, as
+extraction already does. Only the href is decoded: link labels and anchors
+retain their original bytes, and generated relative hrefs retain the existing
+raw-space output contract. `%2520` therefore names a literal `%20` in a path,
+never a space after a second decode. Decoded NUL hrefs and NUL labels are
+skipped, matching extraction. Decoded `#` or `|` in the path is also skipped:
+the shared resolver treats those as wiki delimiters and could otherwise
+rewrite a link to a different note. This conservatively leaves those hrefs
+unchanged; it does not fix their existing index/filename ambiguity. Native
+regressions live in `tests/test_move_encoded_markdown_links.py`.
+
 **Extraction is bounded per note** at `MAX_LINKS_PER_NOTE` (10,000), applied in
 **document order** — the two extraction loops (wikilinks, then markdown links)
 are merged by position before the cut, so a note with 20,000 wikilinks does not

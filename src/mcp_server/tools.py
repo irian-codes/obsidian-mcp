@@ -20,7 +20,7 @@ from datetime import datetime, timezone
 from functools import wraps
 from pathlib import Path, PurePosixPath
 from types import SimpleNamespace
-from urllib.parse import urlsplit
+from urllib.parse import unquote, urlsplit
 
 import pydantic_core
 from mcp.server.fastmcp import Image
@@ -4589,7 +4589,15 @@ def _rewrite_links_in_text(
         href = link.href.strip()
         if not href:
             continue
-        target_for_resolve = href[:-3] if href.endswith(".md") else href
+        # Match extraction: decode the href once, never the anchor or label.
+        decoded = unquote(href)
+        if "\x00" in decoded or "\x00" in link.text:
+            continue
+        # Resolver treats these as wiki delimiters, not filename characters.
+        # Do not introduce a rewrite to a different note after URL decoding.
+        if "#" in decoded or "|" in decoded:
+            continue
+        target_for_resolve = decoded[:-3] if decoded.endswith(".md") else decoded
         if resolve_target(target_for_resolve, source_path, pre_move_index) != from_id:
             continue
         anchor = _kept(link.anchor_start, link.anchor)

@@ -677,7 +677,9 @@ can write. The rules:
 - **Markdown hrefs cannot exclude brackets** — `[t](Foo [draft].md)` is a legal
   link to a legal filename; Obsidian forbids brackets in wikilink syntax, not
   in filenames. They are **length-bounded** instead, at `MDLINK_HREF_MAX`
-  (2,048), which exceeds `MAX_PATH_CHARS` (1,024) plus any anchor.
+  (2,048) characters before the final `.md`; the suffix and anchor are not
+  charged. URI encoding can expand a valid filesystem path beyond that bound,
+  so generated move hrefs must be checked too (see below).
 - **Every quantifier is possessive** (`++`, `*+`), so no class can be
   re-entered by backtracking.
 
@@ -759,9 +761,32 @@ performance change with an empty behaviour delta.
 
 **Markdown move targets are URL-decoded exactly once before resolution**, as
 extraction already does. Only the href is decoded: link labels and anchors
-retain their original bytes, and generated relative hrefs retain the existing
-raw-space output contract. `%2520` therefore names a literal `%20` in a path,
-never a space after a second decode. Decoded NUL hrefs and NUL labels are
+retain their original bytes. Generated relative hrefs URI-encode the filesystem
+path with `quote(relative_target, safe="/")`: `/` separators and relative
+resolution survive, spaces become `%20`, and literal `%` becomes `%25`.
+The output path is relative to the linking note's post-move directory, including
+when the moved note rewrites its own self-link. Emitting raw spaces made an
+originally valid encoded link fail to render as a Markdown anchor; emitting a
+literal `%20` filename without escaping `%` could instead point at a space-named
+sibling. `%2520` therefore names a literal `%20` in a path, never a space after
+a second decode. This changes generated href bytes, not the extraction grammar,
+resolution rules, wiki output, labels or anchors.
+
+**Generated Markdown paths must fit the scanner's existing bound.** A path
+with several Unicode directory components can fit every filesystem/path limit
+while its URI-encoded form exceeds `MDLINK_HREF_MAX`. The rewriter checks the
+encoded path's length **before the final `.md`**, excluding the preserved
+anchor: exactly 2,048 characters is accepted; 2,049 is refused.
+`MoveRewriteHrefTooLong` reaches the move preflight's `resource_limit` handler,
+which names the source and aborts the **whole move before any mutation**.
+Nothing is moved, rewritten or reindexed, even if other sources (including the
+moved note's own self-link) already have planned rewrites. Silently skipping
+that rewrite would strand its old link, while publishing an oversized href
+would make extraction omit a previously indexed edge. Use a shorter destination,
+or move without `rewrite_links` and update links separately. The scanner's
+grammar and bound are unchanged.
+
+Decoded NUL hrefs and NUL labels are
 skipped, matching extraction. Decoded `#` or `|` in the path is also skipped:
 the shared resolver treats those as wiki delimiters and could otherwise
 rewrite a link to a different note. This conservatively leaves those hrefs

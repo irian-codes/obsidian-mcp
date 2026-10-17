@@ -20,7 +20,7 @@ from datetime import datetime, timezone
 from functools import wraps
 from pathlib import Path, PurePosixPath
 from types import SimpleNamespace
-from urllib.parse import unquote, urlsplit
+from urllib.parse import quote, unquote, urlsplit
 
 import pydantic_core
 from mcp.server.fastmcp import Image
@@ -4401,6 +4401,25 @@ class MoveRewriteCapExceeded(Exception):
         )
 
 
+class MoveRewriteHrefTooLong(Exception):
+    """A generated Markdown path exceeds the link scanner's accepted bound.
+
+    The scanner counts characters before the final `.md`, excluding the
+    anchor. URI encoding can expand a valid filesystem path beyond that
+    bound, so publishing it would silently remove its indexed link. Raised
+    during preflight and refused before the move or any rewrite commits.
+    """
+
+    def __init__(self, source_path: str, count: int, cap: int):
+        self.source_path = source_path
+        self.count = count
+        self.cap = cap
+        super().__init__(
+            f"{source_path} needs a Markdown path of {count} characters before "
+            f"the final .md, more than MDLINK_HREF_MAX={cap}"
+        )
+
+
 class MoveRewriteOverlap(Exception):
     """Two of one source's rewrites claim overlapping spans of the note.
 
@@ -4503,7 +4522,8 @@ def _rewrite_links_in_text(
     Preserves alias (`|...`) and anchor (`#...`) parts. For wikilinks, a bare
     target stays bare (uses the new stem), while a path-style target is
     rewritten to the full new path-style form (preserving any trailing `.md`).
-    Markdown links always get the new full path. Code blocks are skipped.
+    Markdown links get a URI-encoded path relative to the linking note.
+    Code blocks are skipped.
 
     `fence_scan` is the caller's already-computed `FULL_NOTE` scan of this
     exact `content` — the preflight has one, and passing it keeps the
@@ -4511,6 +4531,7 @@ def _rewrite_links_in_text(
     """
     from src.services.links import (
         FULL_NOTE,
+        MDLINK_HREF_MAX,
         apply_fence_mask,
         resolve_target,
         scan_fences,
@@ -4608,10 +4629,22 @@ def _rewrite_links_in_text(
         output_path = output_source_path or source_path
         source_dir = PurePosixPath(output_path).parent.as_posix()
         relative_target = posixpath.relpath(to_rel, source_dir)
+        # Encode the filesystem path, including literal percent signs, so the
+        # Markdown href stays valid and one URL decode names the same note.
+        encoded_target = quote(relative_target, safe="/")
+        # The scanner bounds the path BEFORE the final `.md`, not the
+        # suffix or anchor. Encoding may exceed it even for a short valid
+        # filesystem path; refuse the whole move rather than lose this edge
+        # from the index when the rewritten note is next extracted.
+        href_prefix_chars = len(encoded_target) - len(".md")
+        if href_prefix_chars > MDLINK_HREF_MAX:
+            raise MoveRewriteHrefTooLong(
+                source_path, href_prefix_chars, MDLINK_HREF_MAX
+            )
         rewrites.append((
             link.start,
             link.end,
-            f"[{text}]({relative_target}{anchor})",
+            f"[{text}]({encoded_target}{anchor})",
         ))
 
     if not rewrites:
@@ -5151,6 +5184,20 @@ async def _move_note_locked(
                         f"(MAX_LINKS_PER_NOTE={e.cap}). Nothing was moved, "
                         "rewritten or reindexed. Move without rewrite_links and "
                         "update that note's links in batches instead.", "resource_limit")
+                    )
+                except MoveRewriteHrefTooLong as e:
+                    # Like the rewrite-count cap, this is a whole-plan
+                    # failure: publishing even one oversized href would make
+                    # extraction silently omit a previously indexed link.
+                    drop(read_target)
+                    return (
+                        _body_refusal(f"Move aborted: rewriting links in {e.source_path} would "
+                        f"generate a URI-encoded Markdown path with {e.count} "
+                        "characters before the final .md, more than the link "
+                        f"scanner limit (MDLINK_HREF_MAX={e.cap}). Nothing was "
+                        "moved, rewritten or reindexed. Move without "
+                        "rewrite_links and update that note's links yourself, "
+                        "or choose a shorter destination path.", "resource_limit")
                     )
                 except MoveRewriteOverlap as e:
                     # Same disposition, and for a stronger reason: this source

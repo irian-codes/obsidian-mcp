@@ -2,6 +2,29 @@
 
 > Deep rationale extracted from `CLAUDE.md`. Read before touching any note or file tool — this is the destructive-write surface.
 
+## MCP tool annotations
+
+Every registration in `src/mcp_server/server.py` publishes explicit v1 SDK
+`ToolAnnotations` through `tools/list`. Reads, searches, graph queries and
+`check_upload` are read-only, non-destructive and closed-world: their domain is
+the caller's bounded vault and its index/status. Operational bookkeeping
+(usage, quota and admission) does not make these into content-writing tools.
+The configured embedding provider does not expand a search's vault domain.
+
+`create_note` is an additive write because it refuses an existing destination.
+`edit_note`, `move_note`, `delete_note`, `set_frontmatter`, `write_file` and
+`delete_file` are potentially destructive writes. Classify the whole supported
+operation, including overwrite, link rewriting and permanent deletion, rather
+than only its defaults or `dry_run` mode. These tools remain closed-world.
+Transfer classifications and their durable capability state are described in
+[file transfer](file-transfer.md#mcp-tool-annotations).
+
+Annotations are client-facing hints, independent of `_tracked`'s write-bucket
+classification, and never authorize a call or replace authentication, vault
+admission or write preconditions. No `idempotentHint` is asserted. Protocol
+coverage lives in `tests/test_tool_annotations.py`; newly registered tools
+must be classified explicitly there too.
+
 ## Unknown arguments are refused (#295)
 
 FastMCP 1.29 builds each tool's argument model on `ArgModelBase`, which sets no

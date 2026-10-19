@@ -2,6 +2,7 @@ from urllib.parse import urlparse
 
 from mcp.server.fastmcp import FastMCP
 from mcp.server.transport_security import TransportSecuritySettings
+from mcp.types import ToolAnnotations
 from pydantic import ConfigDict
 
 from src.config import settings
@@ -110,7 +111,11 @@ mcp = FastMCP(
 )
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, openWorldHint=False
+    )
+)
 async def keyword_search(
     query: str,
     folder: str | None = None,
@@ -138,7 +143,11 @@ async def keyword_search(
     )
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, openWorldHint=False
+    )
+)
 async def read_note(
     path: str,
     section: str | None = None,
@@ -231,7 +240,11 @@ async def read_note(
     return await read_note_impl(path, section=section, offset=offset, limit=limit)
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, openWorldHint=False
+    )
+)
 async def list_notes(
     folder: str = "",
     limit: int = 50,
@@ -255,7 +268,11 @@ async def list_notes(
     return await list_notes_impl(folder, limit=limit, tags=tags, frontmatter=frontmatter)
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, openWorldHint=False
+    )
+)
 async def get_tags(limit: int = 50) -> str:
     """List all tags used across the vault with note counts.
 
@@ -265,7 +282,11 @@ async def get_tags(limit: int = 50) -> str:
     return await get_tags_impl(limit=limit)
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, openWorldHint=False
+    )
+)
 async def get_recent(
     limit: int = 20,
     folder: str | None = None,
@@ -287,7 +308,11 @@ async def get_recent(
     )
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, openWorldHint=False
+    )
+)
 async def semantic_search(
     query: str,
     limit: int = 15,
@@ -342,7 +367,11 @@ async def semantic_search(
     )
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=False, openWorldHint=False
+    )
+)
 async def create_note(
     path: str, content: str, expected_hash: str | None = None
 ) -> str:
@@ -391,7 +420,11 @@ async def create_note(
     return await create_note_impl(path, content, expected_hash=expected_hash)
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=True, openWorldHint=False
+    )
+)
 async def edit_note(
     path: str,
     content: str,
@@ -582,7 +615,11 @@ async def edit_note(
     )
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, openWorldHint=False
+    )
+)
 async def get_vault_guide() -> str:
     """Returns a two-part guide for working with this Obsidian vault:
 
@@ -597,7 +634,11 @@ async def get_vault_guide() -> str:
     return await get_vault_guide_impl()
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, openWorldHint=False
+    )
+)
 async def get_backlinks(path: str, limit: int = 50) -> str:
     """Notes that link TO `path`. Use this to discover what references a given
     note — projects citing a card, daily notes mentioning a person, etc.
@@ -611,7 +652,11 @@ async def get_backlinks(path: str, limit: int = 50) -> str:
     return await get_backlinks_impl(path, limit=limit)
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, openWorldHint=False
+    )
+)
 async def get_links(path: str, limit: int = 100) -> str:
     """Outgoing links from `path` — both resolved and dangling.
 
@@ -638,7 +683,11 @@ async def get_links(path: str, limit: int = 100) -> str:
     return await get_links_impl(path, limit=limit)
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, openWorldHint=False
+    )
+)
 async def get_neighborhood(path: str, depth: int = 1, limit: int = 50) -> str:
     """The connected subgraph reachable from `path` via links or backlinks,
     up to `depth` hops (treated as undirected).
@@ -656,7 +705,11 @@ async def get_neighborhood(path: str, depth: int = 1, limit: int = 50) -> str:
     return await get_neighborhood_impl(path, depth=depth, limit=limit)
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, openWorldHint=False
+    )
+)
 async def find_related(path: str, limit: int = 10) -> str:
     """Semantically similar notes based on the source note's chunk embeddings,
     averaged then queried via pgvector.
@@ -692,7 +745,11 @@ async def find_related(path: str, limit: int = 10) -> str:
     return await find_related_impl(path, limit=limit)
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, openWorldHint=False
+    )
+)
 async def find_orphans(folder: str | None = None, limit: int = 50) -> str:
     """Notes with zero incoming AND zero outgoing resolved links — useful for
     vault hygiene ("what's disconnected?") and cleanup decisions.
@@ -705,7 +762,11 @@ async def find_orphans(folder: str | None = None, limit: int = 50) -> str:
     return await find_orphans_impl(folder=folder, limit=limit)
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=True, openWorldHint=False
+    )
+)
 async def move_note(
     from_path: str,
     to_path: str,
@@ -804,7 +865,11 @@ async def move_note(
     )
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=True, openWorldHint=False
+    )
+)
 async def delete_note(
     path: str, permanent: bool = False, expected_hash: str | None = None
 ) -> str:
@@ -864,7 +929,11 @@ async def delete_note(
     )
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=True, openWorldHint=False
+    )
+)
 async def set_frontmatter(
     path: str,
     updates: dict | None = None,
@@ -939,7 +1008,11 @@ async def set_frontmatter(
     )
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, openWorldHint=False
+    )
+)
 async def read_file(
     path: str,
     encoding: str = "auto",
@@ -998,7 +1071,11 @@ async def read_file(
     )
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=True, openWorldHint=False
+    )
+)
 async def write_file(
     path: str,
     content: str,
@@ -1062,7 +1139,11 @@ async def write_file(
     )
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, openWorldHint=False
+    )
+)
 async def list_files(
     folder: str = ".",
     pattern: str = "*",
@@ -1096,7 +1177,11 @@ async def list_files(
     )
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=True, openWorldHint=False
+    )
+)
 async def request_upload(
     path: str,
     overwrite: bool = False,
@@ -1141,7 +1226,11 @@ async def request_upload(
     return await request_upload_impl(path, overwrite=overwrite, expires_in=expires_in)
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=True, destructiveHint=False, openWorldHint=False
+    )
+)
 async def check_upload(upload_id: str) -> str:
     """Ask what happened to an upload link you minted with `request_upload`.
 
@@ -1176,7 +1265,11 @@ async def check_upload(upload_id: str) -> str:
     return await check_upload_impl(upload_id)
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=False, openWorldHint=False
+    )
+)
 async def request_download(path: str, expires_in: int | None = None) -> str:
     """Get a short-lived link a person can use to save a vault file. Peer to
     `read_file`, which returns the bytes to you — use this one when the file is
@@ -1207,7 +1300,11 @@ async def request_download(path: str, expires_in: int | None = None) -> str:
     return await request_download_impl(path, expires_in=expires_in)
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=True, openWorldHint=True
+    )
+)
 async def import_from_url(url: str, path: str, overwrite: bool = False) -> str:
     """Fetch a file from a public https URL straight into the vault. Requires write permission — a `readwrite` API key, or an OAuth token
     carrying the `readwrite` scope.
@@ -1246,7 +1343,11 @@ async def import_from_url(url: str, path: str, overwrite: bool = False) -> str:
     return await import_from_url_impl(url, path, overwrite=overwrite)
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=True, openWorldHint=False
+    )
+)
 async def delete_file(
     path: str, permanent: bool = False, expected_hash: str | None = None
 ) -> str:

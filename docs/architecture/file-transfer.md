@@ -2,6 +2,24 @@
 
 > Deep rationale extracted from `CLAUDE.md`. Read before touching `src/transfer/`, `src/services/vault_fs.py`, or the mint/redeem tools.
 
+## MCP tool annotations
+
+Both `request_upload` and `request_download` are **not read-only**: minting
+persists a new capability token, even though the call itself does not publish
+vault bytes and a download needs only read permission. `request_download` is
+additive/non-destructive. `request_upload` is potentially destructive because
+the capability can authorize an eventual overwrite. Both are closed-world:
+they mint a capability for one pinned vault path through this server's fixed
+transfer routes, rather than contacting arbitrary external destinations.
+Sharing a returned capability remains an action for the caller to handle.
+
+`check_upload` only queries scoped status and is read-only, non-destructive
+and closed-world. `import_from_url` writes vault bytes, supports overwrite,
+and fetches an arbitrary public URL, so it is non-read-only, potentially
+destructive and open-world even with the SSRF policy in place. These metadata
+hints do not change any minting, redemption or permission check. The
+[common annotation contract](vault-tools.md#mcp-tool-annotations) also applies.
+
 ## File transfer
 
 The transfer tools return typed body refusals (#263) without moving credential

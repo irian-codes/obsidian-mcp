@@ -458,3 +458,15 @@ point of logging them at that level.
   up to three per transfer publication, until `mcp-rate-limits`' write bucket
   refuses. They are durability notes on operations that succeeded, and keeping
   them off the destructive publication path is the reason.
+
+
+## Opt-in native file diagnostics and SDK envelopes
+
+When `CHATGPT_FILE_PROBE_ENABLED=true`, temporary ChatGPT file URLs and IDs are
+credentials. `native_file_privacy.py` filters the SDK 1.29 root-log diagnostics
+for malformed requests/notifications before any handler sees their value-rich
+Pydantic errors. Tool argument errors hide input values, and task-local filters
+suppress HTTPX/httpcore traces only during sensitive fetches. No native file
+arguments are usage parameters. Keep these boundaries when upgrading the SDK;
+see [native file diagnostics](file-transfer.md#native-chatgpt-file-diagnostic)
+for HTTP error redaction and the limits of external tracing protection.

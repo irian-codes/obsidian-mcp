@@ -878,7 +878,12 @@ async def health():
 
 # MCP handler used by both /mcp mount and root proxy
 async def mcp_handler(scope, receive, send):
-    await mcp.session_manager.handle_request(scope, receive, send)
+    if settings.chatgpt_file_probe_enabled:
+        from src.mcp_server.native_file_privacy import NativeFilePrivacy
+
+        await NativeFilePrivacy(mcp.session_manager.handle_request)(scope, receive, send)
+    else:
+        await mcp.session_manager.handle_request(scope, receive, send)
 
 
 # Mount MCP at /mcp with API key auth

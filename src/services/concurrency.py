@@ -35,7 +35,7 @@ from src.services.pool_budget import CLASS_CONNECTIONS, budget_terms
 
 # Bump whenever TOOL_CLASSES changes shape: it is part of the epoch, so rows
 # and counters from a different classification never mix in one window.
-CLASS_MAPPING_VERSION = 2
+CLASS_MAPPING_VERSION = 3
 
 TOOL_CLASSES = {
     "semantic_search": "embedding",
@@ -47,7 +47,7 @@ TOOL_CLASSES = {
                      "get_neighborhood", "find_orphans", "list_files"), "scan"),
     **dict.fromkeys(("read_note", "read_file", "get_recent", "get_vault_guide",
                      "get_backlinks", "get_links", "request_upload",
-                     "check_upload", "request_download"), "light"),
+                     "check_upload", "request_download", "inspect_chatgpt_file"), "light"),
 }
 CLASSES = frozenset(("embedding", "vector", "write", "scan", "light"))
 assert CLASSES == frozenset(CLASS_CONNECTIONS)

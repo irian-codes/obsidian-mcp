@@ -7025,6 +7025,14 @@ async def import_from_url_impl(url: str, path: str, overwrite: bool = False) -> 
     )
 
 
+@_tracked("inspect_chatgpt_file", [])
+async def inspect_chatgpt_file_impl(file, zip_member_index: int | None = None) -> str:
+    # No arguments are logged: even a malformed file object may carry secrets.
+    from src.services.chatgpt_file_probe import inspect_file
+
+    return await inspect_file(file, zip_member_index)
+
+
 @_tracked("delete_file", ["path", "permanent", "expected_hash"], write_class=True)
 async def delete_file_impl(
     path: str, permanent: bool = False, expected_hash: str | None = None

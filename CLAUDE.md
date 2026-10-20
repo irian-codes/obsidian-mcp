@@ -374,7 +374,7 @@ update it in the same change.** What stays here is the short list:
 
 ## MCP tools
 
-25 tools, all registered in `src/mcp_server/server.py` and all wrapped by
+25 default tools (plus the opt-in `inspect_chatgpt_file` diagnostic), all registered in `src/mcp_server/server.py` and all wrapped by
 `_tracked`, which resolves the caller's vault root *before* the tool body runs
 — that decorator is the whole enforcement of "this user has no vault"
 ([vault roots and tenancy](docs/architecture/vault-roots-and-tenancy.md)).
@@ -405,6 +405,10 @@ indexing.
 `import_from_url`, plus the public `/transfer/*` routes. A capability pins
 everything it may do at mint time; see
 [file transfer](docs/architecture/file-transfer.md).
+
+`CHATGPT_FILE_PROBE_ENABLED=true` registers a memory-only native ChatGPT file
+binding diagnostic. Its temporary URL/ID never belong in logs, vault files or
+durable capabilities. See [file transfer](docs/architecture/file-transfer.md#native-chatgpt-file-diagnostic).
 
 ## Architecture notes
 

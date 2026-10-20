@@ -5,6 +5,8 @@ from mcp.server.transport_security import TransportSecuritySettings
 from mcp.types import ToolAnnotations
 from pydantic import ConfigDict
 
+from src.services.chatgpt_file_probe import ChatGPTFile
+
 from src.config import settings
 from src.mcp_server.read_result import ReadNoteResult
 from src.mcp_server.tools import (
@@ -22,6 +24,7 @@ from src.mcp_server.tools import (
     get_tags_impl,
     get_vault_guide_impl,
     import_from_url_impl,
+    inspect_chatgpt_file_impl,
     list_files_impl,
     list_notes_impl,
     move_note_impl,
@@ -1382,6 +1385,48 @@ async def delete_file(
         expected_hash: Optional whole-file raw-byte digest of the incumbent.
     """
     return await delete_file_impl(path, permanent=permanent, expected_hash=expected_hash)
+
+
+if settings.chatgpt_file_probe_enabled:
+    from src.mcp_server.native_file_privacy import install_sdk_validation_redaction
+
+    install_sdk_validation_redaction()
+
+    @mcp.tool(
+        meta={"openai/fileParams": ["file"]},
+        annotations=ToolAnnotations(
+            readOnlyHint=True, destructiveHint=False, idempotentHint=True,
+            openWorldHint=True,
+        ),
+    )
+    async def inspect_chatgpt_file(
+        file: ChatGPTFile, zip_member_index: int | None = None,
+    ) -> str:
+        """Diagnose native ChatGPT file binding using original downloaded bytes.
+
+        Returns byte count, SHA-256, signature, detected format and elapsed time.
+        Optionally hash one ZIP member by zero-based central-directory index;
+        never returns member names. No file content is written to the vault or
+        persisted. Diagnostic limit: 4 MiB downloaded / expanded ZIP bytes,
+        64 ZIP members, 15 seconds for download. Names and MIME claims are
+        ignored; detected format means signature only, not full validation.
+        Temporary file URLs and IDs must come from ChatGPT native binding.
+        Refusals report a closed phase/reason, timings and optional HTTP status;
+        URLs, IDs and remote error details are never returned.
+        """
+        return await inspect_chatgpt_file_impl(file, zip_member_index)
+
+    # Native file inputs require an inline object with optional *string*
+    # metadata, rather than nullable fields. SDK 1.29 preserves tool `meta`
+    # as wire `_meta`, but emits TypedDict definitions through `$ref`.
+    _probe = mcp._tool_manager.get_tool("inspect_chatgpt_file")
+    _probe.parameters["properties"]["file"] = _probe.parameters.pop("$defs")["ChatGPTFile"]
+    # SDK error text otherwise includes invalid values, potentially a live URL.
+    _base = _probe.fn_metadata.arg_model
+    _probe.fn_metadata.arg_model = type(
+        _base.__name__, (_base,),
+        {"model_config": ConfigDict({**_base.model_config, "hide_input_in_errors": True})},
+    )
 
 
 def _forbid_unknown_arguments(server: FastMCP) -> None:

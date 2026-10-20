@@ -31,8 +31,9 @@ unknown, remain successful status queries; only a malformed or inaccessible
 handle is a body refusal. Outcome telemetry records closed markers, never a
 capability or exception prose. Transport routes keep their HTTP contracts.
 
-No MCP client can hand a tool the bytes of a file the user is looking at, and
-the server cannot reach the user's disk. Five tools plus a public route family
+The server cannot reach the user's disk. Ordinary MCP file transfer needs
+an explicit byte handoff; ChatGPT's optional native file binding is covered
+by the diagnostic below. Five tools plus a public route family
 close that gap. The whole design is one idea: **a capability pins everything it
 may do at mint time, and the route acts on nothing else.**
 
@@ -437,3 +438,109 @@ The host is folded to canonical ASCII **first** (NFKC, the alternative full stop
 
 ### Declared filesystem semantics
 Case-sensitive, non-normalising filesystems (ext4/xfs — the production bind mount) on Linux. Hard links must work within the root, and `.trash` must accept a same-device `renameat2(RENAME_NOREPLACE)`; the probes refuse otherwise rather than degrading to an overwriting move. Since #59 this covers the **note** tools too — `create_note`/`write_file` no-clobber publication needs the hard link, and `move_note`/`delete_note` need `renameat2` — so a mount without them loses those tools with a named error, not silently. Case-insensitive or normalising mounts are out of scope, as is any platform without `renameat2` — the non-replacing move has no portable fallback.
+
+
+## Native ChatGPT file diagnostic
+
+`CHATGPT_FILE_PROBE_ENABLED` defaults to `false`; enabling it and restarting
+adds `inspect_chatgpt_file(file, zip_member_index=None)` beside the 25 default
+tools. It tests native binding and original byte integrity, without publishing
+vault content, creating capabilities or persisting file material. It retains
+the normal authenticated `_tracked` admission, rate, concurrency and quota
+gates, including vault-assignment admission; no vault content is accessed.
+Annotations are read-only, non-destructive, idempotent and open-world.
+
+The [official native file contract](https://developers.openai.com/plugins/reference#define-file-inputs)
+is `_meta["openai/fileParams"] = ["file"]`, with one top-level `file` object:
+required string `download_url` and `file_id`, optional string `mime_type` and
+`file_name`. SDK `mcp==1.29.0` accepts registration `meta=` and serializes it as
+`_meta`. Its generated TypedDict reference is inlined in the advertised schema;
+optional strings are not nullable. Keep this metadata/schema contract covered
+by actual `tools/list` tests when upgrading the SDK.
+
+The temporary URL and ID are credentials, never diagnostic output or usage
+parameters. MIME/name claims are ignored. The probe-specific argument model
+hides input values in SDK validation errors; task-local filters suppress HTTPX
+and httpcore request traces during the sensitive fetch, including cleanup and
+cancellation, without muting unrelated tasks. All fetch/inspection exception
+messages are replaced by closed diagnostic refusals before `_tracked` or SDK
+error formatting. In diagnostic mode, a source-scoped root-log filter also
+genericizes SDK 1.29 malformed-envelope request/notification diagnostics, which
+run before tool dispatch. The MCP HTTP response boundary replaces the SDK's
+single-body HTTP 400 envelope-validation detail with a bounded generic
+JSON-RPC error, preserving status/security headers and correcting length. It
+checks only the known short SDK error prefix; it buffers neither requests nor
+successful/streaming responses. This deliberately hides detailed malformed
+protocol values for every caller while the diagnostic is enabled. Actual
+HTTP tests pin both malformed transport and MCP envelopes at DEBUG level.
+Deployment tracing/APM must likewise avoid capturing raw MCP
+arguments or request headers; the application cannot redact an external capture.
+
+The shared `fetch_url_guarded` policy remains authoritative: HTTPS only for this
+tool even if `IMPORT_ALLOW_HTTP=true`, scheme-paired ports 443/8443, all DNS
+answers public, one pinned validated address with original Host/TLS SNI,
+verified TLS, no environment proxies, fresh client and policy checks at every
+redirect, at most five redirects. There is no hostname allowlist. A 15-second
+total fetch deadline and 4 MiB counted stream cap bound this diagnostic;
+Content-Length is only an early refusal. Encoded HTTP bodies are refused, so
+SHA-256 covers original downloaded bytes. No disk staging or extraction occurs.
+
+The JSON result contains byte count, SHA-256, first-16-byte signature hex,
+`detected_format` (`png`, `jpeg`, `zip`, `unknown`), `format_basis: signature_only`,
+and download/inspection/total milliseconds. A signature is not full image
+validation and does not establish that ChatGPT supplied the original upload;
+compare hashes against a separately known original.
+
+ZIP inspection accepts a canonical single-disk, non-ZIP64 layout, at most 64
+members, at most 4 MiB total declared expanded size, stored/deflated entries
+only and no encrypted members. Directory entry count/layout are checked before
+`ZipFile` constructs member objects. With no member index, `directory_only`
+reports no CRC/content validation. A zero-based index selects one non-directory
+member for a counted, capped in-memory read through EOF/CRC validation and
+returns its hash, size, signature and detected format without its name. Other
+members are not decompressed or CRC-checked. Corrupt/unsupported/out-of-bounds
+archives are refused. These are diagnostic bounds, not a production import
+policy; no `write_file` or import feature uses native inputs yet.
+
+
+### Native probe failure diagnostics
+
+A native probe body refusal returns one JSON line followed by the existing
+`MCP-REFUSAL` sentinel. The JSON contains `status: refused`, a closed `phase`
+and `reason`, `download_ms`, `inspection_ms`, `elapsed_ms`, and an optional
+numeric `http_status`. It returns no partial fingerprint, exception text,
+URL, host, ID, filename, header or response body. `_tracked` still records the
+existing typed outcome marker without native file arguments; these diagnostic
+fields are returned to the caller, not added to usage parameters.
+
+| Phase | Reasons |
+| --- | --- |
+| `arguments` | `invalid_arguments` |
+| `url_policy` | `url_policy_refused` |
+| `address_policy` | `address_policy_refused` |
+| `dns` | `dns_failed` |
+| `network` | `network_failed`, `tls_failed` |
+| `response` | `http_status`, `redirect_location_missing`, `redirect_limit`, `content_encoding_refused`, `content_length_invalid` |
+| `download` | `timeout`, `size_limit`, `unexpected_failure` |
+| `zip_inspection` | `zip_validation_failed` |
+| `inspection` | `zip_signature_missing`, `unexpected_failure` |
+
+`SSRFError` exposes optional enum-valued `FetchFailureReason` and numeric
+`http_status` metadata at the existing guard failure sites. Its exception
+class, args and message remain unchanged for ordinary transfer callers. URL
+policy is tagged at the canonicalisation boundary; DNS and address policy are
+separate; HTTPX errors are classified by exception types. A bounded cause-chain
+walk identifies TLS only when an `ssl.SSLError` survives HTTPX/httpcore wrapping;
+otherwise it remains `network_failed`. No classifier parses error messages.
+A streaming network error receives the same safe classification after headers.
+
+The probe validates metadata again before rendering: unknown/non-enum reasons
+become `unexpected_failure`, and HTTP status is emitted only with recognized
+fetch metadata and an exact integer in 100–599 (excluding booleans). No fields
+are copied generically from exceptions. An absent status does not establish
+whether a response was received. `download_ms` spans URL checks, DNS, redirects,
+request/body I/O and connection cleanup until inspection starts; incomplete
+fetches have zero inspection time, and argument refusals have zero download
+time. Timing identifies broad stages, not individual DNS/connect/TLS latency.
+The closed labels improve observation only: fetch/ZIP limits, cancellation,
+redirect validation and SSRF policy are unchanged.

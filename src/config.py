@@ -521,6 +521,8 @@ class Settings(BaseSettings):
     # `import_from_url` refuses plain http by default. Turning this on also
     # admits ports 80/8080 for the http scheme (443/8443 stay https-only).
     import_allow_http: bool = False
+    # Opt-in diagnostic only; never publishes or persists uploaded file bytes.
+    chatgpt_file_probe_enabled: bool = False
 
     # ── Named-staging fallback (one flag, both write paths) ──────────────────
     # Both write paths stage into an unnamed `O_TMPFILE` inode and publish it

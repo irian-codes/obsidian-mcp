@@ -470,3 +470,8 @@ suppress HTTPX/httpcore traces only during sensitive fetches. No native file
 arguments are usage parameters. Keep these boundaries when upgrading the SDK;
 see [native file diagnostics](file-transfer.md#native-chatgpt-file-diagnostic)
 for HTTP error redaction and the limits of external tracing protection.
+Probe body failures return only closed phase/reason labels, measured timings
+and an optional validated numeric HTTP status. The shared fetcher supplies typed
+metadata while retaining ordinary error messages; the probe never parses or
+serializes those messages and rechecks metadata before output. These returned
+diagnostics do not add native arguments or exception fields to usage logs.

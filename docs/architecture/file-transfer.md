@@ -463,7 +463,7 @@ parameters. MIME/name claims are ignored. The probe-specific argument model
 hides input values in SDK validation errors; task-local filters suppress HTTPX
 and httpcore request traces during the sensitive fetch, including cleanup and
 cancellation, without muting unrelated tasks. All fetch/inspection exception
-messages are replaced by closed generic refusals before `_tracked` or SDK
+messages are replaced by closed diagnostic refusals before `_tracked` or SDK
 error formatting. In diagnostic mode, a source-scoped root-log filter also
 genericizes SDK 1.29 malformed-envelope request/notification diagnostics, which
 run before tool dispatch. The MCP HTTP response boundary replaces the SDK's
@@ -501,3 +501,46 @@ returns its hash, size, signature and detected format without its name. Other
 members are not decompressed or CRC-checked. Corrupt/unsupported/out-of-bounds
 archives are refused. These are diagnostic bounds, not a production import
 policy; no `write_file` or import feature uses native inputs yet.
+
+
+### Native probe failure diagnostics
+
+A native probe body refusal returns one JSON line followed by the existing
+`MCP-REFUSAL` sentinel. The JSON contains `status: refused`, a closed `phase`
+and `reason`, `download_ms`, `inspection_ms`, `elapsed_ms`, and an optional
+numeric `http_status`. It returns no partial fingerprint, exception text,
+URL, host, ID, filename, header or response body. `_tracked` still records the
+existing typed outcome marker without native file arguments; these diagnostic
+fields are returned to the caller, not added to usage parameters.
+
+| Phase | Reasons |
+| --- | --- |
+| `arguments` | `invalid_arguments` |
+| `url_policy` | `url_policy_refused` |
+| `address_policy` | `address_policy_refused` |
+| `dns` | `dns_failed` |
+| `network` | `network_failed`, `tls_failed` |
+| `response` | `http_status`, `redirect_location_missing`, `redirect_limit`, `content_encoding_refused`, `content_length_invalid` |
+| `download` | `timeout`, `size_limit`, `unexpected_failure` |
+| `zip_inspection` | `zip_validation_failed` |
+| `inspection` | `zip_signature_missing`, `unexpected_failure` |
+
+`SSRFError` exposes optional enum-valued `FetchFailureReason` and numeric
+`http_status` metadata at the existing guard failure sites. Its exception
+class, args and message remain unchanged for ordinary transfer callers. URL
+policy is tagged at the canonicalisation boundary; DNS and address policy are
+separate; HTTPX errors are classified by exception types. A bounded cause-chain
+walk identifies TLS only when an `ssl.SSLError` survives HTTPX/httpcore wrapping;
+otherwise it remains `network_failed`. No classifier parses error messages.
+A streaming network error receives the same safe classification after headers.
+
+The probe validates metadata again before rendering: unknown/non-enum reasons
+become `unexpected_failure`, and HTTP status is emitted only with recognized
+fetch metadata and an exact integer in 100–599 (excluding booleans). No fields
+are copied generically from exceptions. An absent status does not establish
+whether a response was received. `download_ms` spans URL checks, DNS, redirects,
+request/body I/O and connection cleanup until inspection starts; incomplete
+fetches have zero inspection time, and argument refusals have zero download
+time. Timing identifies broad stages, not individual DNS/connect/TLS latency.
+The closed labels improve observation only: fetch/ZIP limits, cancellation,
+redirect validation and SSRF policy are unchanged.

@@ -37,11 +37,13 @@ import os
 import re
 import secrets
 import socket
+import ssl
 import time
 import unicodedata
 import weakref
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
+from enum import StrEnum
 from pathlib import Path, PurePosixPath
 from typing import AsyncContextManager, AsyncIterator, Awaitable, Callable, Iterable
 from urllib.parse import urljoin, urlsplit, urlunsplit
@@ -131,13 +133,63 @@ class CredentialTooShortLived(CredentialNotUsable):
     """
 
 
+class FetchFailureReason(StrEnum):
+    """Closed, credential-free outbound failure metadata; never exception prose."""
+
+    URL_POLICY = "url_policy_refused"
+    ADDRESS_POLICY = "address_policy_refused"
+    DNS = "dns_failed"
+    NETWORK = "network_failed"
+    TLS = "tls_failed"
+    TIMEOUT = "timeout"
+    HTTP_STATUS = "http_status"
+    REDIRECT_LOCATION = "redirect_location_missing"
+    REDIRECT_LIMIT = "redirect_limit"
+    CONTENT_ENCODING = "content_encoding_refused"
+    CONTENT_LENGTH = "content_length_invalid"
+
+
+def http_failure_reason(exc: httpx.HTTPError) -> FetchFailureReason:
+    """Classify by types only; do not inspect potentially credential-rich text.
+
+    HTTPX/httpcore preserve TLS exceptions as causes in ordinary TLS failures.
+    A backend that discards that cause remains a network failure, not a guessed
+    TLS verdict. Bound traversal and tolerate cyclic exception chains.
+    """
+    if isinstance(exc, httpx.TimeoutException):
+        return FetchFailureReason.TIMEOUT
+    current: BaseException | None = exc
+    seen: set[int] = set()
+    for _ in range(8):
+        if current is None or id(current) in seen:
+            break
+        seen.add(id(current))
+        if isinstance(current, ssl.SSLError):
+            return FetchFailureReason.TLS
+        current = current.__cause__ or current.__context__
+    return FetchFailureReason.NETWORK
+
+
 class SSRFError(TransferError):
     """A URL, hop, or resolved address violated the outbound-fetch policy.
 
     The message names the violated rule: the caller is an agent that has to
     decide whether to retry with a different URL, and "blocked" alone is not
-    actionable.
+    actionable. Optional closed metadata lets sensitive callers classify
+    without parsing or exposing that message. Existing args/text are unchanged.
     """
+
+    def __init__(
+        self, *args, reason: FetchFailureReason | None = None,
+        http_status: int | None = None,
+    ):
+        if reason is not None and not isinstance(reason, FetchFailureReason):
+            raise ValueError("Invalid fetch failure reason")
+        super().__init__(*args)
+        self.reason = reason
+        # Remote servers can send nonstandard status numbers. Metadata must
+        # never replace the existing SSRFError/message with a validation error.
+        self.http_status = http_status if type(http_status) is int and 100 <= http_status <= 599 else None
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -2316,7 +2368,7 @@ async def resolve_and_check(
         if not policy(parts.literal_ip):
             raise SSRFError(
                 f"Address {parts.literal_ip.compressed} is not a globally "
-                "routable public address"
+                "routable public address", reason=FetchFailureReason.ADDRESS_POLICY,
             )
         return parts.literal_ip.compressed
 
@@ -2324,19 +2376,22 @@ async def resolve_and_check(
     try:
         answers = list(await resolver(parts.host, parts.port))
     except OSError as exc:
-        raise SSRFError(f"Could not resolve {parts.host!r}: {exc}") from None
+        raise SSRFError(
+            f"Could not resolve {parts.host!r}: {exc}",
+            reason=FetchFailureReason.TIMEOUT if isinstance(exc, TimeoutError) else FetchFailureReason.DNS,
+        ) from None
     if not answers:
-        raise SSRFError(f"Host {parts.host!r} did not resolve")
+        raise SSRFError(f"Host {parts.host!r} did not resolve", reason=FetchFailureReason.DNS)
 
     chosen: str | None = None
     for answer in answers:
         addr = _parse_ip(answer)
         if addr is None:
-            raise SSRFError(f"Resolver returned an unparsable address: {answer!r}")
+            raise SSRFError(f"Resolver returned an unparsable address: {answer!r}", reason=FetchFailureReason.DNS)
         if not policy(addr):
             raise SSRFError(
                 f"Host {parts.host!r} resolves to {addr.compressed}, which is not a "
-                "globally routable public address"
+                "globally routable public address", reason=FetchFailureReason.ADDRESS_POLICY,
             )
         if chosen is None:
             chosen = addr.compressed
@@ -2436,7 +2491,11 @@ async def _fetch_hops(
 ) -> AsyncIterator[FetchResult]:
     """The redirect loop. Split out so the deadline wrapper stays legible."""
     for hop in range(max_redirects + 1):
-        parts = canonicalise(current, allow_http=allow_http)
+        try:
+            parts = canonicalise(current, allow_http=allow_http)
+        except SSRFError as exc:
+            exc.reason = FetchFailureReason.URL_POLICY
+            raise
         address = await resolve_and_check(parts, resolver=resolver, policy=policy)
 
         transport = PinnedTransport(
@@ -2458,29 +2517,33 @@ async def _fetch_hops(
             try:
                 response = await client.send(request, stream=True)
             except httpx.HTTPError as exc:
-                raise SSRFError(f"Fetch failed: {exc}") from None
+                raise SSRFError(f"Fetch failed: {exc}", reason=http_failure_reason(exc)) from None
 
             if response.status_code in REDIRECT_STATUSES:
                 location = response.headers.get("location")
                 if not location:
                     raise SSRFError(
-                        f"Redirect {response.status_code} without a Location header"
+                        f"Redirect {response.status_code} without a Location header",
+                        reason=FetchFailureReason.REDIRECT_LOCATION, http_status=response.status_code,
                     )
                 if hop >= max_redirects:
                     raise SSRFError(
-                        f"More than {max_redirects} redirects"
+                        f"More than {max_redirects} redirects",
+                        reason=FetchFailureReason.REDIRECT_LIMIT, http_status=response.status_code,
                     )
                 redirect_to = urljoin(parts.url, location)
                 continue
 
             if response.status_code != 200:
                 raise SSRFError(
-                    f"Expected HTTP 200, got {response.status_code}"
+                    f"Expected HTTP 200, got {response.status_code}",
+                    reason=FetchFailureReason.HTTP_STATUS, http_status=response.status_code,
                 )
             if response.headers.get("content-encoding"):
                 raise SSRFError(
                     "Response is content-encoded; only identity encoding is "
-                    "accepted so the byte cap counts real bytes"
+                    "accepted so the byte cap counts real bytes",
+                    reason=FetchFailureReason.CONTENT_ENCODING, http_status=response.status_code,
                 )
             declared = response.headers.get("content-length")
             if declared is not None:
@@ -2491,7 +2554,7 @@ async def _fetch_hops(
                             f"the {max_bytes:,}-byte limit"
                         )
                 except ValueError:
-                    raise SSRFError("Malformed Content-Length in response") from None
+                    raise SSRFError("Malformed Content-Length in response", reason=FetchFailureReason.CONTENT_LENGTH, http_status=response.status_code) from None
 
             yield FetchResult(
                 chunks=response.aiter_bytes(),
@@ -2507,4 +2570,4 @@ async def _fetch_hops(
             if redirect_to is not None:
                 current = redirect_to
 
-    raise SSRFError(f"More than {max_redirects} redirects")  # pragma: no cover
+    raise SSRFError(f"More than {max_redirects} redirects", reason=FetchFailureReason.REDIRECT_LIMIT)  # pragma: no cover

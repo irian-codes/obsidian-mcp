@@ -6,6 +6,7 @@ error. Keep this separate from vault publication and durable transfer tokens.
 from __future__ import annotations
 
 from contextvars import ContextVar
+from enum import StrEnum
 import hashlib
 import io
 import json
@@ -52,6 +53,69 @@ for _name in (
 
 class _InvalidZip(Exception):
     pass
+
+
+class ProbePhase(StrEnum):
+    ARGUMENTS = "arguments"
+    URL_POLICY = "url_policy"
+    ADDRESS_POLICY = "address_policy"
+    DNS = "dns"
+    NETWORK = "network"
+    RESPONSE = "response"
+    DOWNLOAD = "download"
+    ZIP_INSPECTION = "zip_inspection"
+    INSPECTION = "inspection"
+
+
+class ProbeFailureReason(StrEnum):
+    INVALID_ARGUMENTS = "invalid_arguments"
+    SIZE_LIMIT = "size_limit"
+    ZIP_VALIDATION = "zip_validation_failed"
+    ZIP_SIGNATURE = "zip_signature_missing"
+    UNEXPECTED = "unexpected_failure"
+
+
+_FETCH_PHASES = {
+    transfer.FetchFailureReason.URL_POLICY: ProbePhase.URL_POLICY,
+    transfer.FetchFailureReason.ADDRESS_POLICY: ProbePhase.ADDRESS_POLICY,
+    transfer.FetchFailureReason.DNS: ProbePhase.DNS,
+    transfer.FetchFailureReason.NETWORK: ProbePhase.NETWORK,
+    transfer.FetchFailureReason.TLS: ProbePhase.NETWORK,
+    transfer.FetchFailureReason.TIMEOUT: ProbePhase.DOWNLOAD,
+    transfer.FetchFailureReason.HTTP_STATUS: ProbePhase.RESPONSE,
+    transfer.FetchFailureReason.REDIRECT_LOCATION: ProbePhase.RESPONSE,
+    transfer.FetchFailureReason.REDIRECT_LIMIT: ProbePhase.RESPONSE,
+    transfer.FetchFailureReason.CONTENT_ENCODING: ProbePhase.RESPONSE,
+    transfer.FetchFailureReason.CONTENT_LENGTH: ProbePhase.RESPONSE,
+}
+
+
+def _failure(
+    phase: ProbePhase, reason: transfer.FetchFailureReason | ProbeFailureReason,
+    code: str, *, start: float, inspection_start: float | None = None,
+    http_status: int | None = None,
+) -> str:
+    """Output only closed labels, measured durations and validated status.
+
+    Exception messages/args/causes are never rendered. Recheck metadata here,
+    even though the shared fetcher validates its own error constructor.
+    """
+    if type(phase) is not ProbePhase:
+        phase = ProbePhase.DOWNLOAD
+    if type(reason) not in (transfer.FetchFailureReason, ProbeFailureReason):
+        reason = ProbeFailureReason.UNEXPECTED
+    end = time.monotonic()
+    report = {
+        "status": "refused", "phase": phase.value, "reason": reason.value,
+        "download_ms": round(max(0.0, (inspection_start if inspection_start is not None else end) - start) * 1000, 2)
+        if phase is not ProbePhase.ARGUMENTS else 0.0,
+        "inspection_ms": round(max(0.0, end - inspection_start) * 1000, 2)
+        if inspection_start is not None else 0.0,
+        "elapsed_ms": round(max(0.0, end - start) * 1000, 2),
+    }
+    if type(http_status) is int and 100 <= http_status <= 599:
+        report["http_status"] = http_status
+    return body_refusal(json.dumps(report, separators=(",", ":")), code)
 
 
 def _format(signature: bytes) -> str:
@@ -127,6 +191,7 @@ def _zip_summary(payload: bytes, member_index: int | None) -> dict:
 
 async def inspect_file(file: ChatGPTFile, member_index: int | None = None) -> str:
     start = time.monotonic()
+    inspection_start = None
     # Also validate direct Python callers; do not stringify an invalid value.
     if (
         not isinstance(file, dict)
@@ -135,7 +200,7 @@ async def inspect_file(file: ChatGPTFile, member_index: int | None = None) -> st
         or not file["file_id"]
         or (member_index is not None and (type(member_index) is not int or member_index < 0))
     ):
-        return body_refusal("Invalid native file diagnostic arguments.", "invalid_argument")
+        return _failure(ProbePhase.ARGUMENTS, ProbeFailureReason.INVALID_ARGUMENTS, "invalid_argument", start=start)
     token = _sensitive_fetch.set(True)
     try:
         payload = bytearray()
@@ -159,22 +224,39 @@ async def inspect_file(file: ChatGPTFile, member_index: int | None = None) -> st
             try:
                 report["zip"] = _zip_summary(payload, member_index)
             except (zipfile.BadZipFile, RuntimeError, ValueError, NotImplementedError, _InvalidZip):
-                return body_refusal("ZIP inspection refused: corrupt, encrypted, unsupported, or diagnostic bounds exceeded.", "validation_failed")
+                return _failure(ProbePhase.ZIP_INSPECTION, ProbeFailureReason.ZIP_VALIDATION, "validation_failed", start=start, inspection_start=inspection_start)
         elif member_index is not None:
-            return body_refusal("ZIP member requested for a file without a ZIP signature.", "invalid_argument")
+            return _failure(ProbePhase.INSPECTION, ProbeFailureReason.ZIP_SIGNATURE, "invalid_argument", start=start, inspection_start=inspection_start)
         end = time.monotonic()
         report["download_ms"] = round((inspection_start - start) * 1000, 2)
         report["inspection_ms"] = round((end - inspection_start) * 1000, 2)
         report["elapsed_ms"] = round((end - start) * 1000, 2)
         return json.dumps(report, separators=(",", ":"))
     except transfer.TooLarge:
-        return body_refusal("Native file exceeds the 4 MiB diagnostic limit.", "fetch_refused")
+        return _failure(ProbePhase.DOWNLOAD, ProbeFailureReason.SIZE_LIMIT, "fetch_refused", start=start)
     except (transfer.Timeout, httpx.TimeoutException, TimeoutError):
-        return body_refusal("Native file diagnostic download timed out.", "transfer_timeout")
+        return _failure(ProbePhase.DOWNLOAD, transfer.FetchFailureReason.TIMEOUT, "transfer_timeout", start=start)
+    except transfer.SSRFError as exc:
+        reason = exc.reason if type(exc.reason) is transfer.FetchFailureReason else ProbeFailureReason.UNEXPECTED
+        # Status is useful only alongside recognized fetch metadata. Never
+        # trust an arbitrary exception attribute as a diagnostic value.
+        status = exc.http_status if type(reason) is transfer.FetchFailureReason else None
+        return _failure(
+            _FETCH_PHASES.get(reason, ProbePhase.DOWNLOAD), reason,
+            "transfer_timeout" if reason is transfer.FetchFailureReason.TIMEOUT else "fetch_refused",
+            start=start, http_status=status,
+        )
+    except httpx.HTTPError as exc:
+        # Stream errors can occur after the shared fetcher yielded the body.
+        reason = transfer.http_failure_reason(exc)
+        return _failure(_FETCH_PHASES[reason], reason, "fetch_refused", start=start)
     except Exception:
         # The shared fetcher's exceptions can contain signed URLs. Never allow
         # them into _tracked/SDK traceback formatting, even unexpected failures.
         # Cancellation is BaseException and must still unwind/close connections.
-        return body_refusal("Native file diagnostic fetch or inspection refused.", "fetch_refused")
+        return _failure(
+            ProbePhase.INSPECTION if inspection_start is not None else ProbePhase.DOWNLOAD,
+            ProbeFailureReason.UNEXPECTED, "fetch_refused", start=start, inspection_start=inspection_start,
+        )
     finally:
         _sensitive_fetch.reset(token)

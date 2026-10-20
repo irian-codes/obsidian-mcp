@@ -1411,6 +1411,8 @@ if settings.chatgpt_file_probe_enabled:
         64 ZIP members, 15 seconds for download. Names and MIME claims are
         ignored; detected format means signature only, not full validation.
         Temporary file URLs and IDs must come from ChatGPT native binding.
+        Refusals report a closed phase/reason, timings and optional HTTP status;
+        URLs, IDs and remote error details are never returned.
         """
         return await inspect_chatgpt_file_impl(file, zip_member_index)
 

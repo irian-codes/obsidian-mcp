@@ -462,10 +462,12 @@ point of logging them at that level.
 
 ## Opt-in native file diagnostics and SDK envelopes
 
-When `CHATGPT_FILE_PROBE_ENABLED=true`, temporary ChatGPT file URLs and IDs are
+When `CHATGPT_FILE_PROBE_ENABLED=true` or `CHATGPT_IMAGE_IMPORT_ENABLED=true`,
+temporary ChatGPT file URLs and IDs are
 credentials. `native_file_privacy.py` filters the SDK 1.29 root-log diagnostics
 for malformed requests/notifications before any handler sees their value-rich
-Pydantic errors. Tool argument errors hide input values, and task-local filters
+Pydantic errors. Native tool argument errors are generic, hiding values and
+arbitrary unknown key names; task-local filters
 suppress HTTPX/httpcore traces only during sensitive fetches. No native file
 arguments are usage parameters. Keep these boundaries when upgrading the SDK;
 see [native file diagnostics](file-transfer.md#native-chatgpt-file-diagnostic)

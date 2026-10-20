@@ -333,9 +333,8 @@ clients supply tokens. Creation is exempt and refuses a supplied token
 as `no_incumbent`. Files above their read cap cannot be guarded.
 
 ### File transfer
-No MCP client can hand a tool the bytes of a file the user is looking
-at, so `write_file` is only usable when the agent already has the
-content. These tools close that gap with short-lived capability links,
+`write_file` needs bytes the agent already has. The standard transfer
+tools provide short-lived capability links,
 redeemed over the public `/transfer/*` routes.
 - `request_upload(path, overwrite=False, expires_in?)`, mints a
   single-use link bound to exactly one destination path. The human
@@ -361,6 +360,28 @@ no-clobber semantics, and bound at mint time to the file state they
 were minted against — a link cannot silently undo an edit made while it
 was waiting. `MCP_HOSTNAME` or `BASE_URL` must be set; without a public
 origin the mint tools refuse rather than emit a localhost link.
+
+### Native ChatGPT images (opt-in)
+
+Enable `CHATGPT_FILE_PROBE_ENABLED=true` and the separate
+`CHATGPT_IMAGE_IMPORT_ENABLED=true`, then restart and refresh the client tool
+list. Both default to false. Attach an image in ChatGPT and call
+`inspect_chatgpt_file` first. ChatGPT may supply a JPEG derivative of an uploaded
+PNG: use the reported actual hash/format, not the original filename or MIME.
+Call `import_chatgpt_image(file, path, expected_sha256)` with that native file,
+the inspected bare 64-hex SHA-256 and a new destination matching the actual
+format (`.png`, `.jpg`/`.jpeg`). A mismatch refuses before publication and
+reports the actual supported format/canonical extension. Existing targets
+always refuse; no overwrite option exists.
+
+This imports the exact received PNG/JPEG bytes without re-encoding or ZIP
+extraction. Format checks inspect signatures, not full pixel decoding. The
+source checksum confirms the inspected download; it is not a destination
+precondition. The existing `MAX_FILE_WRITE_BYTES` technical bound applies;
+512 KiB remains an advisory choice, not a new import limit. This tool needs no
+public origin, web upload page or capability link and returns no source URL.
+Success reports destination, byte count, SHA-256, detected format and MIME.
+If completion is partial, inspect the destination before retrying.
 
 ### Wikilink graph
 - `get_backlinks(path, limit=50)`, notes linking TO `path`
@@ -1053,6 +1074,7 @@ to multi-user later resumes where you left off without re-bootstrapping
 | `TRANSFER_MAX_CONCURRENT_UPLOADS` | `4` | Simultaneous upload streams |
 | `IMPORT_ALLOW_HTTP` | `false` | Let `import_from_url` fetch plain http. Off by default. |
 | `CHATGPT_FILE_PROBE_ENABLED` | `false` | Register the memory-only `inspect_chatgpt_file` native ChatGPT diagnostic after restart; 4 MiB / 15 s download bounds, no vault writes. See [native file diagnostic](docs/architecture/file-transfer.md#native-chatgpt-file-diagnostic). |
+| `CHATGPT_IMAGE_IMPORT_ENABLED` | `false` | Register checksum-confirmed native PNG/JPEG import to a new path; no overwrite, public origin or re-encoding. Uses `MAX_FILE_WRITE_BYTES`. |
 | `VAULT_ALLOW_NAMED_STAGING_FALLBACK` | `false` | Accept named staging on filesystems without `O_TMPFILE`. One flag, both write paths. See [System requirements](#system-requirements). |
 | `WRITE_PRECONDITION_REQUIRED` | `false` | Require `expected_hash` on supported destructive calls. Creation is exempt; enable after clients adopt read hashes. |
 | `EMBEDDING_PROVIDER` | `ollama` | `ollama` or `openai` |
@@ -1073,7 +1095,7 @@ to multi-user later resumes where you left off without re-bootstrapping
 | `MCP_AUTH_FAILURE_TABLE_SIZE` | `4096` | Counter slots in the fixed-size, per-process-salted address table. Memory is O(size); collisions only make the control stricter. |
 | `MCP_RATE_LIMIT_PER_MINUTE` | `120` | Sustained tool calls per minute per principal (an API key, or an OAuth *grant*). Null — with the burst — disables the general bucket. |
 | `MCP_RATE_LIMIT_BURST` | `30` | Capacity of the general bucket. Must be set together with its rate or nulled together with it. |
-| `MCP_WRITE_RATE_LIMIT_PER_MINUTE` | `60` | Sustained vault-mutating calls per minute per principal — the eight write tools, plus `PUT /transfer/upload` charged to the principal that minted the capability. |
+| `MCP_WRITE_RATE_LIMIT_PER_MINUTE` | `60` | Sustained vault-mutating calls per minute per principal — the eight default write tools and opt-in `import_chatgpt_image`, plus `PUT /transfer/upload` charged to the principal that minted the capability. |
 | `MCP_WRITE_RATE_LIMIT_BURST` | `15` | Capacity of the write bucket. |
 | `MCP_LIMITER_MAX_TRACKED_PRINCIPALS` | `10000` | Principals holding their own limiter entry before further ones share one overflow entry. |
 | `MCP_REFUSAL_LOG_INTERVAL_SECONDS` | `10` | How long one rate/slot-refusal coalescing window stays open. Inside it a refusal writes nothing; the row that lands stands for `1 + suppressed` refusals. |
@@ -1381,7 +1403,7 @@ fast one credential can create work.
 
 - **A general bucket** — `MCP_RATE_LIMIT_PER_MINUTE` (120) sustained,
   `MCP_RATE_LIMIT_BURST` (30) capacity — on every tool call.
-- **A write bucket** — 60/min, burst 15 — that the eight vault-mutating
+- **A write bucket** — 60/min, burst 15 — that the eight default vault-mutating
   tools must pass in addition, and that `PUT /transfer/upload` consumes
   too, charged to the principal that **minted** the capability so the
   write rate cannot be escaped by minting links and redeeming them.

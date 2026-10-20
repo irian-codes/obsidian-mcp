@@ -181,7 +181,11 @@ async def test_all_fetch_errors_redacted(monkeypatch, caplog, exc):
         raise exc
         yield
     monkeypatch.setattr(transfer, "fetch_url_guarded", fail)
-    with caplog.at_level(logging.DEBUG):
+    with (
+        caplog.at_level(logging.DEBUG),
+        caplog.at_level(logging.DEBUG, logger="httpx"),
+        caplog.at_level(logging.DEBUG, logger="httpcore.http11"),
+    ):
         result = await probe.inspect_file(FILE)
         # Filters must reset even on errors: unrelated request logging survives.
         logging.getLogger("httpx").info("ordinary-request")

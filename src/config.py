@@ -523,6 +523,8 @@ class Settings(BaseSettings):
     import_allow_http: bool = False
     # Opt-in diagnostic only; never publishes or persists uploaded file bytes.
     chatgpt_file_probe_enabled: bool = False
+    # Separate opt-in native PNG/JPEG no-clobber import surface.
+    chatgpt_image_import_enabled: bool = False
 
     # ── Named-staging fallback (one flag, both write paths) ──────────────────
     # Both write paths stage into an unnamed `O_TMPFILE` inode and publish it

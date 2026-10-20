@@ -7025,6 +7025,39 @@ async def import_from_url_impl(url: str, path: str, overwrite: bool = False) -> 
     )
 
 
+@_tracked("import_chatgpt_image", [], write_class=True)
+async def import_chatgpt_image_impl(file, path: str, expected_sha256: str) -> str:
+    # File arguments and copied native capabilities never belong in usage rows.
+    if err := _require_write():
+        return err
+    from src.services.chatgpt_image_import import import_image, refuse
+
+    uid = current_user_id.get()
+    try:
+        if "://" in path:
+            return refuse("unsafe_path", "unsafe_path")
+        root, rel = _vault_context(path, uid)
+        if PurePosixPath(rel).suffix.lower() not in {".png", ".jpg", ".jpeg"}:
+            return refuse("invalid_extension", "validation_failed")
+        if _fingerprint_of(root, rel) is not None:
+            return refuse("already_exists", "already_exists")
+        identity = _transfer_identity()
+    except (ValueError, vault_fs.UnsafePath):
+        return refuse("unsafe_path", "unsafe_path")
+    except Exception:
+        return refuse("vault_unavailable", "transfer_unavailable")
+
+    @asynccontextmanager
+    async def gate():
+        async with async_session() as session:
+            async with transfer.lock_identity_for_publish(
+                session, identity, vault_root=root, need_write=True,
+            ) as handle:
+                yield handle
+
+    return await import_image(file, root, rel, expected_sha256, before_publish=gate)
+
+
 @_tracked("inspect_chatgpt_file", [])
 async def inspect_chatgpt_file_impl(file, zip_member_index: int | None = None) -> str:
     # No arguments are logged: even a malformed file object may carry secrets.

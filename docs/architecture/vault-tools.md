@@ -21,7 +21,11 @@ Transfer classifications and their durable capability state are described in
 
 Annotations are client-facing hints, independent of `_tracked`'s write-bucket
 classification, and never authorize a call or replace authentication, vault
-admission or write preconditions. No `idempotentHint` is asserted. Protocol
+admission or write preconditions. Default tools assert no `idempotentHint`. The opt-in no-clobber
+`import_chatgpt_image` declares idempotency: another identical call refuses the
+now-existing path without another mutation. See its source-checksum and
+format contract in [file transfer](file-transfer.md#native-chatgpt-image-import).
+Protocol
 coverage lives in `tests/test_tool_annotations.py`; newly registered tools
 must be classified explicitly there too.
 

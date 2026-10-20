@@ -878,7 +878,7 @@ async def health():
 
 # MCP handler used by both /mcp mount and root proxy
 async def mcp_handler(scope, receive, send):
-    if settings.chatgpt_file_probe_enabled:
+    if settings.chatgpt_file_probe_enabled or settings.chatgpt_image_import_enabled:
         from src.mcp_server.native_file_privacy import NativeFilePrivacy
 
         await NativeFilePrivacy(mcp.session_manager.handle_request)(scope, receive, send)

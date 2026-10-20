@@ -3,7 +3,7 @@ from urllib.parse import urlparse
 from mcp.server.fastmcp import FastMCP
 from mcp.server.transport_security import TransportSecuritySettings
 from mcp.types import ToolAnnotations
-from pydantic import ConfigDict
+from pydantic import ConfigDict, ValidationError
 
 from src.services.chatgpt_file_probe import ChatGPTFile
 
@@ -25,6 +25,7 @@ from src.mcp_server.tools import (
     get_vault_guide_impl,
     import_from_url_impl,
     inspect_chatgpt_file_impl,
+    import_chatgpt_image_impl,
     list_files_impl,
     list_notes_impl,
     move_note_impl,
@@ -1387,11 +1388,13 @@ async def delete_file(
     return await delete_file_impl(path, permanent=permanent, expected_hash=expected_hash)
 
 
-if settings.chatgpt_file_probe_enabled:
+if settings.chatgpt_file_probe_enabled or settings.chatgpt_image_import_enabled:
     from src.mcp_server.native_file_privacy import install_sdk_validation_redaction
 
     install_sdk_validation_redaction()
 
+
+if settings.chatgpt_file_probe_enabled:
     @mcp.tool(
         meta={"openai/fileParams": ["file"]},
         annotations=ToolAnnotations(
@@ -1416,17 +1419,59 @@ if settings.chatgpt_file_probe_enabled:
         """
         return await inspect_chatgpt_file_impl(file, zip_member_index)
 
-    # Native file inputs require an inline object with optional *string*
-    # metadata, rather than nullable fields. SDK 1.29 preserves tool `meta`
-    # as wire `_meta`, but emits TypedDict definitions through `$ref`.
-    _probe = mcp._tool_manager.get_tool("inspect_chatgpt_file")
-    _probe.parameters["properties"]["file"] = _probe.parameters.pop("$defs")["ChatGPTFile"]
-    # SDK error text otherwise includes invalid values, potentially a live URL.
-    _base = _probe.fn_metadata.arg_model
-    _probe.fn_metadata.arg_model = type(
-        _base.__name__, (_base,),
-        {"model_config": ConfigDict({**_base.model_config, "hide_input_in_errors": True})},
+
+if settings.chatgpt_image_import_enabled:
+    @mcp.tool(
+        meta={"openai/fileParams": ["file"]},
+        annotations=ToolAnnotations(
+            readOnlyHint=False, destructiveHint=False, idempotentHint=True,
+            openWorldHint=True,
+        ),
     )
+    async def import_chatgpt_image(file: ChatGPTFile, path: str, expected_sha256: str) -> str:
+        """Import inspected native ChatGPT PNG/JPEG bytes into a new vault path.
+
+        First inspect the native file, then supply its actual SHA-256 as bare
+        64 hex characters and choose a destination matching the actual format:
+        .png for PNG, .jpg or .jpeg for JPEG. ChatGPT may supply a JPEG derivative
+        of an uploaded PNG. The checksum confirms downloaded source bytes,
+        not a destination precondition. MIME/name claims are ignored.
+
+        Never overwrites: an existing or concurrently created target refuses.
+        No re-encoding, ZIP import/extraction, URL output or public-origin setup.
+        Uses MAX_FILE_WRITE_BYTES and the guarded HTTPS/atomic publication path.
+        Check partial-completion reports before retrying. Repeat success cannot
+        add another mutation at this path: the now-existing target refuses.
+        """
+        return await import_chatgpt_image_impl(file, path, expected_sha256)
+
+
+def _private_native_argument_model(base):
+    class NativeArguments(base):
+        model_config = ConfigDict({**base.model_config, "hide_input_in_errors": True})
+
+        @classmethod
+        def model_validate(cls, *args, **kwargs):
+            try:
+                return super().model_validate(*args, **kwargs)
+            except ValidationError:
+                # hide_input_in_errors hides values, but arbitrary unknown key
+                # names can themselves contain a native capability or file ID.
+                raise ValueError("Invalid native file arguments (input values redacted)") from None
+
+    return NativeArguments
+
+
+# Native input registration uses SDK 1.29's tool meta and TypedDict parser.
+# Keep inline four-property wire schemas and hidden values in SDK errors for
+# each enabled native tool, including when only image import is enabled.
+for _native_name in ("inspect_chatgpt_file", "import_chatgpt_image"):
+    _native = mcp._tool_manager.get_tool(_native_name)
+    if _native is None:
+        continue
+    _native.parameters["properties"]["file"] = _native.parameters.pop("$defs")["ChatGPTFile"]
+    _base = _native.fn_metadata.arg_model
+    _native.fn_metadata.arg_model = _private_native_argument_model(_base)
 
 
 def _forbid_unknown_arguments(server: FastMCP) -> None:

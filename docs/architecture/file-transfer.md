@@ -459,8 +459,9 @@ optional strings are not nullable. Keep this metadata/schema contract covered
 by actual `tools/list` tests when upgrading the SDK.
 
 The temporary URL and ID are credentials, never diagnostic output or usage
-parameters. MIME/name claims are ignored. The probe-specific argument model
-hides input values in SDK validation errors; task-local filters suppress HTTPX
+parameters. MIME/name claims are ignored. Native argument models
+return a generic SDK validation error, hiding both values and arbitrary extra
+argument names that might themselves contain credentials; task-local filters suppress HTTPX
 and httpcore request traces during the sensitive fetch, including cleanup and
 cancellation, without muting unrelated tasks. All fetch/inspection exception
 messages are replaced by closed diagnostic refusals before `_tracked` or SDK
@@ -471,7 +472,7 @@ single-body HTTP 400 envelope-validation detail with a bounded generic
 JSON-RPC error, preserving status/security headers and correcting length. It
 checks only the known short SDK error prefix; it buffers neither requests nor
 successful/streaming responses. This deliberately hides detailed malformed
-protocol values for every caller while the diagnostic is enabled. Actual
+protocol values for every caller while either native feature is enabled. Actual
 HTTP tests pin both malformed transport and MCP envelopes at DEBUG level.
 Deployment tracing/APM must likewise avoid capturing raw MCP
 arguments or request headers; the application cannot redact an external capture.
@@ -500,7 +501,7 @@ member for a counted, capped in-memory read through EOF/CRC validation and
 returns its hash, size, signature and detected format without its name. Other
 members are not decompressed or CRC-checked. Corrupt/unsupported/out-of-bounds
 archives are refused. These are diagnostic bounds, not a production import
-policy; no `write_file` or import feature uses native inputs yet.
+policy; the separate native image import below does not use ZIP inspection or extraction.
 
 
 ### Native probe failure diagnostics
@@ -544,3 +545,65 @@ fetches have zero inspection time, and argument refusals have zero download
 time. Timing identifies broad stages, not individual DNS/connect/TLS latency.
 The closed labels improve observation only: fetch/ZIP limits, cancellation,
 redirect validation and SSRF policy are unchanged.
+
+
+## Native ChatGPT image import
+
+`CHATGPT_IMAGE_IMPORT_ENABLED=false` is independent of the diagnostic flag.
+Enabling it registers `import_chatgpt_image(file, path, expected_sha256)` with
+exactly the same four-property native `file` schema and `_meta` contract. No
+public origin or transfer capability is needed; no public routes are involved.
+The intended sequence is inspect, review actual format/hash, then import. A
+PNG attachment may resolve to JPEG bytes, and its destination must match those
+bytes. The server does not re-encode or silently save JPEG as PNG.
+
+`expected_sha256` is required bare 64 hexadecimal characters, case-insensitive
+and normalized to lowercase. A `sha256:` prefix is refused. It confirms source
+bytes from inspection, not an incumbent destination precondition. Only PNG and
+JPEG signatures are accepted (not full pixel decoding); destinations must end
+in `.png`, or `.jpg`/`.jpeg`, respectively. Wrong suffix reports only the safe
+actual format and canonical extension (`.png` or `.jpg`), never a source name.
+No ZIP extraction/import is supported.
+
+One `_tracked` write wrapper applies normal auth, root admission, general/write
+rate buckets, write concurrency and quota. Read permission is refused before
+fetch or publication probes. Native arguments are not usage parameters. Path
+preflight uses the shared lexical/anchored guards and refuses existing targets
+before fetching; the authoritative no-clobber publish also catches a target
+created later. No overwrite option exists. Annotations are writable,
+non-destructive, open-world and idempotent: repeating a successful call cannot
+mutate the already-existing path, and returns `already_exists`.
+
+The service uses guarded HTTPS with the existing 8,192-character URL bound,
+`MAX_FILE_WRITE_BYTES` counted download bound and a 30-second total fetch/write
+deadline. It holds one bounded bytearray, hashes it without a full buffer copy,
+then closes the network response before publishing. Checksum/signature/suffix
+must all pass before any payload is staged. This avoids exposing mismatched
+bytes even briefly. Memory grows with received bytes up to the write cap
+(bytearray allocation slack and fixed-size chunks add overhead); it is not a
+new process-wide memory reservation. Existing admission controls remain in
+force and 512 KiB is not a hard import cap.
+
+Verified bytes pass in fixed-size chunks through `stream_to_vault` with
+`overwrite=False`, using its unnamed staging, supported explicit named
+fallback, mount checks, atomic no-clobber link and directory durability rules.
+The existing `lock_identity_for_publish` re-reads and locks credential/user
+rows across publication, so revocation, downgrade or root reassignment during
+fetch prevents publication. No DB connection is held during network fetch.
+Before-publication cancellation propagates and staging is cleaned; after-
+publication completion failure uses the existing partial-completion contract.
+
+Success JSON contains `status: imported`, `path`, `size_bytes`, `sha256`,
+`detected_format`, `mime` and `canonical_extension`. Ordinary refusals are typed
+`BodyOutcome`s with closed reasons; outbound failures reuse safe diagnostic
+phase/reason/status/timings. A partial result reports verified destination/hash
+and `action: inspect_destination_before_retry`, never claims nothing was
+written, and does not invite a blind retry. No response contains source URL,
+ID, host, supplied MIME/name or exception text.
+
+The native SDK validation/root logging/HTTP400 privacy guards apply whenever
+**either** native feature is enabled, including image-import-only deployments.
+HTTPX/httpcore tracing is suppressed only in the sensitive task through fetch,
+publication and cleanup; other requests retain their normal logs. External
+tracing must still avoid raw MCP arguments. Default-disabled installations keep
+their original 25-tool registry.

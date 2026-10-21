@@ -1,6 +1,6 @@
 # Schema drift and migrations
 
-> Deep rationale extracted from `CLAUDE.md`. Read before writing or reviewing a migration.
+> Deep rationale extracted from `AGENTS.md`. Read before writing or reviewing a migration.
 
 ## Schema drift is not only what `alembic check` sees
 

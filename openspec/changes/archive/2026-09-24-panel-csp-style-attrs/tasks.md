@@ -10,7 +10,7 @@ Six implementation slices in two waves. Each slice is one worktree and one indep
 | 2 | C: health and performance | `wt-psa-c-perf` | `performance.html`, `health.html` | 114 |
 | 2 | D: analytics | `wt-psa-d-analytics` | `search_analytics.html`, `usage.html` | 84 |
 | 2 | E: admin pages | `wt-psa-e-admin` | `oauth.html`, `keys.html`, `users.html`, `user_edit.html`, `vault.html` | 110 |
-| — | G: docs (supervisor) | on the merge branch | `docs/architecture/control-panel.md`, `CLAUDE.md` | — |
+| — | G: docs (supervisor) | on the merge branch | `docs/architecture/control-panel.md`, `AGENTS.md` | — |
 
 **Why two waves.** Wave 2 consumes the utility vocabulary and the `{% block page_style %}` hook that Slice A creates. Wave 2 branches from the merge of wave 1, never from `origin/main`. Slice F is independent of every template and runs in wave 1. On its own branch its new static and rendered-body tests fail, because the templates still carry attributes. That is expected, and **F's tests are authoritative only on the fully merged tree** (task 3.2).
 
@@ -102,5 +102,5 @@ Six implementation slices in two waves. Each slice is one worktree and one indep
 ## 7. Docs (Slice G, supervisor) and archive
 
 - [x] 7.1 `docs/architecture/control-panel.md`: update the directive block. Replace "Style attributes stay allowed, by decision" with the D5/D6 rationale: nonce-only elements, `style-src-attr 'none'` spelled out, the nonced fallback, why not a static stylesheet (defence in depth: `'self'` would admit any current or future same-origin `text/css` response; today's `/transfer/*` byte routes need an `Authorization: Bearer` header and so cannot be loaded as a stylesheet, but the panel's style policy should not depend on that staying true), and CSSOM as the dynamic path. Rewrite "SVG colors ride in `style=""`" as "SVG colours ride in stylesheet classes, never in `fill=`/`stroke=` with `var()`". Describe the utility vocabulary, the `page_style` block, and the no-`!important` rule. Mark archived limitations 1 and 2 closed.
-- [x] 7.2 `CLAUDE.md`: the panel-CSP key-decision bullet. Replace "Style *attributes* are allowed (`style-src-attr 'unsafe-inline'`) by decision" with "no inline `style=`; `style-src-attr 'none'`; dynamic presentation through `el.style.*` or classes; SVG colours via classes".
+- [x] 7.2 `AGENTS.md`: the panel-CSP key-decision bullet. Replace "Style *attributes* are allowed (`style-src-attr 'unsafe-inline'`) by decision" with "no inline `style=`; `style-src-attr 'none'`; dynamic presentation through `el.style.*` or classes; SVG colours via classes".
 - [ ] 7.3 `openspec archive panel-csp-style-attrs -y`. Open a PR to main with `Closes #289`, then merge it through CI (main is protected). Push. The change is not done until it is on the remote.

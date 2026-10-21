@@ -32,7 +32,7 @@ Slices A, B and C touch disjoint files and can run in parallel worktrees; D depe
 - [x] 5.2 `Makefile` `init`: generate `OBSIDIAN_DB_PASSWORD` (hex, ≥ 24 chars) into `.env` and create `postgres.env` (mode 600) with its own generated `POSTGRES_PASSWORD`, without overwriting existing files
 - [x] 5.3 `DEPLOYMENT.md`: Step 2/3 for both bundles (two files, two passwords, which container sees which); new "Upgrading: split database roles" section (backup, steps from design Migration Plan, the exact script command, the two failure messages, rollback, `DATABASE_ALLOW_SUPERUSER`); fix the `psql -U obsidian_mcp` example; note that k3s is unaffected
 - [x] 5.4 `README.md`: Quick start mentions `postgres.env`; Upgrading gains a **Breaking** bullet linking the DEPLOYMENT.md section and `DATABASE_ALLOW_SUPERUSER`
-- [x] 5.5 `docs/architecture/schema-and-migrations.md`: role model (bootstrap vs runtime, migrations need ownership + TEMP only, the non-superuser migration test as the gate, the startup refusal); `CLAUDE.md` key-decisions bullet
+- [x] 5.5 `docs/architecture/schema-and-migrations.md`: role model (bootstrap vs runtime, migrations need ownership + TEMP only, the non-superuser migration test as the gate, the startup refusal); `AGENTS.md` key-decisions bullet
 
 ## 6. Gates
 

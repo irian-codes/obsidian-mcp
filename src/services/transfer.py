@@ -811,7 +811,7 @@ def _minted_by_principal(identity: Identity):
     groups pre-014 rows by `(client_id, user_id)`, which #64 accepted as
     approximate. Two consents by the same user *for the same client* made
     before 014 therefore share one family, and this predicate holds for both.
-    See the "same-client, pre-014" limitation in CLAUDE.md.
+    See the "same-client, pre-014" limitation in AGENTS.md.
     """
     if identity.oauth_token_id is None:
         return and_(

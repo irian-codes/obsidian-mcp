@@ -37,6 +37,6 @@ specifies the complete admission and observation contract before enabling it.
 
 New concurrency controller and shared pool constants; config, database engine,
 auth middleware, `_tracked` and usage writer, existing coalescer integration,
-main lifecycle, tests, `.env.example`, README, CLAUDE.md and rate-limit/tenancy/
+main lifecycle, tests, `.env.example`, README, AGENTS.md and rate-limit/tenancy/
 usage architecture notes. No migration or new dependency. Existing issue #261
 coordinates the work; #263 supplies terminal body outcomes independently.

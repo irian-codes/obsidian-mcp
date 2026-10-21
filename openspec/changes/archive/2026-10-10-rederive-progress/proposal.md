@@ -92,7 +92,7 @@ No new setting.
 - `tests/`: unit tests, `tests/integration/` real-Postgres test, schema gate
   head literal and 030 cases.
 - Docs: `docs/architecture/indexing-and-embeddings.md`,
-  `docs/architecture/schema-and-migrations.md`, CLAUDE.md's indexer decisions.
+  `docs/architecture/schema-and-migrations.md`, AGENTS.md's indexer decisions.
 - `src/mcp_server/tools.py` (`move_note`'s metadata transaction) and the
   link backfill: clear `derived_under` on every row whose link state they
   mutate without changing its path, hash or extraction version (design D3).

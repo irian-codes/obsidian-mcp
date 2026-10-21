@@ -107,7 +107,7 @@
 
 ## 6. Documentation
 
-- [x] 6.1 Record the gate in `CLAUDE.md` next to the multi-user vault behaviour
+- [x] 6.1 Record the gate in `AGENTS.md` next to the multi-user vault behaviour
 - [x] 6.2 `openspec validate vault-unassignment-revokes-tools --strict` passes
-- [x] 6.3 CLAUDE.md records the ownerless-credential rule and the
+- [x] 6.3 AGENTS.md records the ownerless-credential rule and the
       warm-then-resolve hazard in the panel

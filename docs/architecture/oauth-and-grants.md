@@ -1,6 +1,6 @@
 # OAuth: grant families, consent, scope
 
-> Deep rationale extracted from `CLAUDE.md`. Read before touching `src/oauth/`, the consent page, or anything that mints, rotates or revokes a token.
+> Deep rationale extracted from `AGENTS.md`. Read before touching `src/oauth/`, the consent page, or anything that mints, rotates or revokes a token.
 
 ## OAuth grant families
 

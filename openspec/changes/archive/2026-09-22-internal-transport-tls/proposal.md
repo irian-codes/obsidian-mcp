@@ -32,9 +32,9 @@ No migration, no new dependency (certifi is already an httpx dependency), no cha
 
 - Code: new `src/services/transport_security.py`; `src/config.py` (settings block + two validators); `src/database.py`; `alembic/env.py`; `src/main.py` (lifespan probe + transport report); `src/services/embeddings.py` (both providers use the factory); `src/control_panel/routes.py` (the `/api/tags` ping uses the factory); `src/services/security_events.py` (catalogue entry).
 - Tests: new `tests/test_internal_transport_config.py`, `tests/test_internal_transport_startup.py`, `tests/test_internal_transport_http_clients.py`, `tests/integration/test_internal_transport_pg.py`; `tests/conftest.py` (`SETTINGS_ENV_KEYS` and `CONTROLLED_TEST_ENV`) and the import-isolated subprocess spawners that build their own environments.
-- Docs: `docs/architecture/indexing-and-embeddings.md`, `docs/architecture/schema-and-migrations.md`, `docs/architecture/security-event-logging.md`, `.env.example`, `DEPLOYMENT.md`, one `CLAUDE.md` key-decision line.
+- Docs: `docs/architecture/indexing-and-embeddings.md`, `docs/architecture/schema-and-migrations.md`, `docs/architecture/security-event-logging.md`, `.env.example`, `DEPLOYMENT.md`, one `AGENTS.md` key-decision line.
 - Deploy: the production deploy-dir `.env` gains `EMBEDDING_ALLOW_PLAINTEXT=true` **before** `make deploy` (task 7.1). `DATABASE_SSL_MODE` stays unset (`prefer`) until the operator enables server-side TLS.
-- Gates: `make audit`, `make test-integration`; an adversarial Codex pass is mandatory (the change touches the embedding path, which `CLAUDE.md` names as a mandatory trigger, and a boot-refusal on the live path). No migration, so `make test-schema` is not required; `make db-check` after deploy regardless.
+- Gates: `make audit`, `make test-integration`; an adversarial Codex pass is mandatory (the change touches the embedding path, which `AGENTS.md` names as a mandatory trigger, and a boot-refusal on the live path). No migration, so `make test-schema` is not required; `make db-check` after deploy regardless.
 - Partially addresses #184 and #185: the application half closes; each issue stays open (or is closed in favour of) the infrastructure follow-up issue whose text is in design.md, "Operator follow-up".
 
 ## Spec review

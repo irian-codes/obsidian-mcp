@@ -231,7 +231,7 @@ the full offline + integration + schema run on the merged tree (task 5.1).
   - `security-event-logging.md`: the outcome values.
   - `control-panel.md`: the section.
   - `schema-and-migrations.md`: a 028 section.
-  - CLAUDE.md: add "four modes" and "a concurrency refusal spends rate tokens, no quota" to the concurrency bullet; **keep** "leases remain held through telemetry".
+  - AGENTS.md: add "four modes" and "a concurrency refusal spends rate tokens, no quota" to the concurrency bullet; **keep** "leases remain held through telemetry".
 - [x] 5.4 `openspec-verifier` against this change; iterate to zero blocking gaps.
 - [x] 5.5 Adversarial Codex, two rounds by default. Attack surfaces:
   - a queue overrun turned refusal, or losing a row;

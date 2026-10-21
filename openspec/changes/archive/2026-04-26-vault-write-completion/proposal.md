@@ -76,5 +76,5 @@ None. Existing `note-filters` and `vault-guide` capabilities are unaffected.
 - **Tests**: New smoke checklist at `tests/vault_write_completion_smoke.md`
   following the format of `tests/note_filters_smoke.md` and
   `tests/wikilink_graph_smoke.md`.
-- **Docs**: Update `CLAUDE.md` "Project Layout" / capability summary if a
+- **Docs**: Update `AGENTS.md` "Project Layout" / capability summary if a
   tool index exists. Update `IMPROVEMENTS.md` to reflect items #5/#6 status.

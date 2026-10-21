@@ -1,6 +1,6 @@
 # Control panel
 
-> Deep rationale extracted from `CLAUDE.md`. Read before touching panel templates, flash messages, the admin guards, or the Danger zone.
+> Deep rationale extracted from `AGENTS.md`. Read before touching panel templates, flash messages, the admin guards, or the Danger zone.
 
 ## The panel CSP, and vendored assets
 

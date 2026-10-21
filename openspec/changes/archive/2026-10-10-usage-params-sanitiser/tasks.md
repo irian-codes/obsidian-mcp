@@ -33,7 +33,7 @@ Slice A (renderer) and slice B (outcome + coalescer drop) touch different functi
 - [x] 4.1 `docs/architecture/usage-attribution.md`: a new section, "What reaches `params` is rendered, not trusted (#310)". It covers the three PostgreSQL rejections and why `json.dumps` passes them; the escape grammar and `rendered_params`; why the renderer sits at `_write_usage_row_admitted` and not in `named_params()`; the transfer exclusion; the D4 length bound; and L1, L2, L4.
 - [x] 4.2 `docs/architecture/rate-limits.md`, "A planned row is acknowledged, and a failed one is requeued": add the unstorable exception (drop, no window re-created, one `usage_refusal_row_dropped` with the weight), the revised Σ arithmetic, and L3 and L5.
 - [x] 4.3 `docs/architecture/security-event-logging.md`: a catalogue row for `usage_refusal_row_dropped`, and one sentence on the `usage_log_failed` row ("a `DataError` here after #310 is a renderer defect, not a caller input").
-- [x] 4.4 `CLAUDE.md`: no new key-decisions bullet unless review asks for one. The usage-attribution note is the home. Confirm that no README or `.env.example` change is needed, because there is no new setting (grep-check before the PR).
+- [x] 4.4 `AGENTS.md`: no new key-decisions bullet unless review asks for one. The usage-attribution note is the home. Confirm that no README or `.env.example` change is needed, because there is no new setting (grep-check before the PR).
 
 ## 5. Gates
 

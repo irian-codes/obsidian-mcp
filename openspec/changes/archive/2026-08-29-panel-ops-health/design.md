@@ -16,7 +16,7 @@ Backups are written by `make db-backup` (host-side, into `$(DATA_DIR)/backups`) 
 
 ## Risks / Trade-offs
 
-- [Makefile insert fails silently] → the insert is `&&`-chained after a successful dump and its failure fails the target loudly; deploy aborts (backup is the migration safety net — CLAUDE.md already treats it as such).
+- [Makefile insert fails silently] → the insert is `&&`-chained after a successful dump and its failure fails the target loudly; deploy aborts (backup is the migration safety net — AGENTS.md already treats it as such).
 - [Ring buffer misses multi-worker errors] → single-process uvicorn today; noted in docs if that changes.
 - [Panel shows stale "healthy" after container restart clears errors] → page states the observation window ("since process start HH:MM").
 

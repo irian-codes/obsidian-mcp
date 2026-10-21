@@ -52,7 +52,7 @@
 
 ## 8. Documentation refresh
 
-- [x] 8.1 Update CLAUDE.md "Project Layout" or any tool index with the new `move_note`, `delete_note`, `set_frontmatter` tools and the expanded `edit_note` modes.
+- [x] 8.1 Update AGENTS.md "Project Layout" or any tool index with the new `move_note`, `delete_note`, `set_frontmatter` tools and the expanded `edit_note` modes.
 - [x] 8.2 Update IMPROVEMENTS.md to mark items #5 (the parts we adopted: dry-run + atomic write) and #6 (move/delete/set_frontmatter) as shipped, and re-number the suggested order accordingly. Note explicitly which sub-items were skipped (git auto-commit, `note_revisions`, `bulk_edit`).
 
 ## 9. Verification

@@ -13,7 +13,7 @@ returned fewer than the requested overfetch, while the same queries without the
 planner override returned full result sets. `keyword_search` never uses its GIN
 index (5 index scans lifetime vs 3,655 seq scans; each query detoasts all ~3,800
 tsvectors, ~13,000 buffers). This is exactly the "silently wrong search results"
-failure `CLAUDE.md` names as the expensive one: an agent acts on an empty
+failure `AGENTS.md` names as the expensive one: an agent acts on an empty
 filtered result and concludes the note does not exist.
 
 ## What Changes
@@ -80,4 +80,4 @@ which do not change._
   with vectors, asserts folder-filtered semantic search returns the expected
   rows (non-empty, correct order) and that `EXPLAIN` of the keyword query shows
   the GIN index.
-- Adversarial-Codex trigger per `CLAUDE.md`: changes the search result path.
+- Adversarial-Codex trigger per `AGENTS.md`: changes the search result path.

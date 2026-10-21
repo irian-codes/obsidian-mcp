@@ -36,7 +36,7 @@ vault. Symlinked *directories* inside a vault are a common Obsidian setup
   never re-traversed during the mutation — which requires the tools to act on
   the returned `Path`, so the read-modify-write pairs use `read_bytes_at` /
   `write_file_at` / `write_bytes_at` rather than re-passing the caller's string.
-- Docs: `CLAUDE.md` write-tools section, tool docstrings one sentence.
+- Docs: `AGENTS.md` write-tools section, tool docstrings one sentence.
 
 ## Capabilities
 
@@ -51,5 +51,5 @@ _None._
 
 ## Impact
 
-- `src/services/vault.py` (`validate_mutable_path`), `src/mcp_server/tools.py` (six call sites), `src/mcp_server/server.py` docstrings, `CLAUDE.md`, tests (per tool: alias final component → refused, target byte-identical; symlinked ancestor dir resolving inside the vault → still writable; escaping symlink → still rejected; dangling symlink at a create/write destination → refused with a clear message, no write).
+- `src/services/vault.py` (`validate_mutable_path`), `src/mcp_server/tools.py` (six call sites), `src/mcp_server/server.py` docstrings, `AGENTS.md`, tests (per tool: alias final component → refused, target byte-identical; symlinked ancestor dir resolving inside the vault → still writable; escaping symlink → still rejected; dangling symlink at a create/write destination → refused with a clear message, no write).
 - Adversarial-Codex trigger: write tools.

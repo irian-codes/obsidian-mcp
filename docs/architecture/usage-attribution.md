@@ -1,6 +1,6 @@
 # Usage attribution
 
-> Deep rationale extracted from `CLAUDE.md`. Read before touching `usage_logs`, `_log_usage`, or the actor columns on `transfer_tokens`.
+> Deep rationale extracted from `AGENTS.md`. Read before touching `usage_logs`, `_log_usage`, or the actor columns on `transfer_tokens`.
 
 ## Usage attribution is denormalised, because the credential can be deleted
 

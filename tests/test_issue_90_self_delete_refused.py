@@ -447,7 +447,7 @@ def test_a_missing_target_is_still_a_404():
 
 
 def test_no_second_lock_key_is_introduced():
-    """Two keys do not exclude each other — CLAUDE.md is explicit. The
+    """Two keys do not exclude each other — AGENTS.md is explicit. The
     self-delete refusal must ride the one key the edit handler also takes."""
     me = _user()
     _, session = _delete(me, me, remaining_admins=3)

@@ -1,6 +1,6 @@
 # File transfer
 
-> Deep rationale extracted from `CLAUDE.md`. Read before touching `src/transfer/`, `src/services/vault_fs.py`, or the mint/redeem tools.
+> Deep rationale extracted from `AGENTS.md`. Read before touching `src/transfer/`, `src/services/vault_fs.py`, or the mint/redeem tools.
 
 ## MCP tool annotations
 

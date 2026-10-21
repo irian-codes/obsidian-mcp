@@ -29,7 +29,7 @@
 
 - [x] 5.1 Search README.md and `src/control_panel/templates/` for `get_vault_context` references and update to `get_vault_guide` — N/A: no README exists; templates have no tool-name strings
 - [ ] 5.2 Add a short README section explaining that users can create `CLAUDE.md` at the vault root to teach the agent vault-specific conventions, with a brief example of what to include — DEFERRED: no README exists, and project guidelines require explicit user request before creating one. The tool's "no CLAUDE.md found" response (in `_NO_CLAUDE_MD_MESSAGE`) now self-documents this. Reopen if a README is added later.
-- [x] 5.3 Update CLAUDE.md (project root, not vault root) if it documents the tool surface — N/A: project-root CLAUDE.md does not enumerate MCP tools by name
+- [x] 5.3 Update AGENTS.md (project root, not vault root) if it documents the tool surface — N/A: project-root AGENTS.md does not enumerate MCP tools by name
 
 ## 6. Test and deploy
 

@@ -57,7 +57,7 @@ Run with `make test-integration SCHEMA_TEST_CONTAINER=omcp-schema-w2b SCHEMA_TES
 
 - [x] 7.1 `docs/architecture/indexing-and-embeddings.md`: new section "Re-derive progress (#311)" — the marker, the digest and its binding, the writer rule, per-row force, the narrowed withholding table, the invariant re-read, completion re-resolution, the sweep rule, what a stuck scope costs per tick, L1–L5; update D8's paragraph ("a re-derive forces every file into `to_upsert`"), the stat-shortcut eligibility bullet, C5's deferral sentence and the D12 sentence on re-derive
 - [x] 7.2 `docs/architecture/schema-and-migrations.md`: "030: `notes_metadata.derived_under`" — no backfill and why (016's rule; a recorded digest can never match a re-derive), reconcile-or-refuse, marked downgrade, gate cases
-- [x] 7.3 CLAUDE.md, Key decisions: one bullet — re-derive progress is a per-row `derived_under` digest bound to the root facts and the row's path/hash/extraction version; only a re-derive pass writes it non-NULL; the stamp records only when every surviving row matches; a repeated re-derive rewrites only unresolved rows (#311)
+- [x] 7.3 AGENTS.md, Key decisions: one bullet — re-derive progress is a per-row `derived_under` digest bound to the root facts and the row's path/hash/extraction version; only a re-derive pass writes it non-NULL; the stamp records only when every surviving row matches; a repeated re-derive rewrites only unresolved rows (#311)
 - [x] 7.4 Confirm no new setting (README / `.env.example` unchanged); grep-check per the public-docs rule
 
 ## 8. Gates

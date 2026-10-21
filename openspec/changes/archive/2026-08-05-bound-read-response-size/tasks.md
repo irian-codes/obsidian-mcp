@@ -1,7 +1,7 @@
 ## 1. Config
 
 - [x] 1.1 Add `max_read_response_chars: int = Field(40_000, ge=1_000)` to `Settings` in `src/config.py` (env: `MAX_READ_RESPONSE_CHARS`), with a comment distinguishing it from the byte caps above it.
-- [x] 1.2 Document the variable in `.env.example`, `README.md`, `DEPLOYMENT.md`, and `CLAUDE.md`.
+- [x] 1.2 Document the variable in `.env.example`, `README.md`, `DEPLOYMENT.md`, and `AGENTS.md`.
 
 ## 2. Vault service — shared section addressing
 
@@ -31,7 +31,7 @@
 - [x] 5.1 Update the `read_note` and `read_file` `@mcp.tool()` signatures and docstrings in `src/mcp_server/server.py`, documenting the cap, the selector forms, and that `limit` can only lower the cap.
 - [x] 5.2 Update `README.md`: tool table, a Response size limits section, and the behavior-change note for existing callers.
 - [x] 5.3 Update `DEPLOYMENT.md` and `.env.example` with `MAX_READ_RESPONSE_CHARS`.
-- [x] 5.4 Update `CLAUDE.md` key decisions.
+- [x] 5.4 Update `AGENTS.md` key decisions.
 - [x] 5.5 Add both tracked params (`section`, `offset`, `limit`) to the `_tracked` decorator calls so `usage_logs` records them.
 
 ## 6. Tests
@@ -69,7 +69,7 @@ Three findings, all reproduced before accepting.
 - [x] 8.3 **`offset == len(body)` reported as "past the end."** Exactly-at-the-end is a
   completed read, not a caller error. Now distinguished from `offset > len` in both
   `read_note` and `read_file`.
-- [x] 8.4 Update specs, archived deltas, design rationale, README, CLAUDE.md, and the
+- [x] 8.4 Update specs, archived deltas, design rationale, README, AGENTS.md, and the
   `read_note` docstring to match; invert the test that codified the wrong ordinal priority.
 - [x] 8.5 Re-run: 300 passed, 5 skipped; `openspec validate --specs --strict` 9 passed.
 
@@ -120,9 +120,9 @@ payload (Python slices code points; escaping happens after).
   implementation truncates to a marker at a degenerate cap. Reconciled honestly: at least one
   entry when one fits; otherwise a truncated marker, because the cap is the binding
   constraint and there is no output worth exceeding it for.
-- [x] 10.4 **Contract-level inaccuracy in the docs.** `.env.example`, README and CLAUDE.md
+- [x] 10.4 **Contract-level inaccuracy in the docs.** `.env.example`, README and AGENTS.md
   described the cap as bounding "what read_note returns", but it is a per-component budget:
   content window and outline are each bounded, so a truncated response can carry both and the
   worst case is ~2x cap plus fixed notice prose. Corrected in all three, matching what
   design.md already said and what the end-to-end test asserts.
-- [x] 10.5 Removed a paragraph duplicated verbatim in CLAUDE.md.
+- [x] 10.5 Removed a paragraph duplicated verbatim in AGENTS.md.

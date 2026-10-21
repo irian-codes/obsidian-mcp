@@ -165,7 +165,7 @@ loaded (it is loaded there today; leave that read where it is), but **before
 the active-admin count and before any row is written**. That ordering is what
 the spec's two ordering scenarios assert: a demoted actor gets
 `_ACTOR_REVOKED_MSG`, and a self-target gets the self-delete message rather
-than the last-admin one. Do **not** add a second advisory-lock key; CLAUDE.md
+than the last-admin one. Do **not** add a second advisory-lock key; AGENTS.md
 is explicit that two keys do not exclude each other. Do not commit between the
 lock and the write. Leave `edit_user_submit` alone.
 

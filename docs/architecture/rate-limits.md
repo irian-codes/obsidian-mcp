@@ -1,6 +1,6 @@
 # Rate limits: principals, buckets, and the shape of a refusal
 
-> Deep rationale extracted from `CLAUDE.md`. Read before touching
+> Deep rationale extracted from `AGENTS.md`. Read before touching
 > `src/services/rate_limits.py`, `src/services/refusals.py`, the failed-auth
 > budget in `src/mcp_server/auth.py`, the gate order in `_tracked`
 > (`src/mcp_server/tools.py`), or any `MCP_RATE_LIMIT_*` /
@@ -614,7 +614,7 @@ A proxy cannot condition on the **response status**, so a `ratelimit`
 middleware on `obsidian-mcp-api-rtr` would have to throttle *authenticated*
 agents in order to bound *unauthenticated* probing — and `/transfer/*`,
 `/health` and `/.well-known` share that router. On top of that the host's
-Traefik static configuration is outside this repo (`CLAUDE.md`, "Public repo —
+Traefik static configuration is outside this repo (`AGENTS.md`, "Public repo —
 host paths live outside the tree"), so a control expressed there would not be
 reproducible from the tree. The `docker-compose.yml` labels are unchanged, with
 a comment there recording the decision.

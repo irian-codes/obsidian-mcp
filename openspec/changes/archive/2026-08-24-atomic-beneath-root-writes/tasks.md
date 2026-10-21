@@ -102,7 +102,7 @@ task in group 3 reads it.
   named message and creates nothing; with the syscall unavailable and the
   startup probe skipped, a download redemption still answers the uniform 404
 - [x] 1.9 Update the `vault_fs` module docstring and `vault.py`'s "remaining
-  residual" paragraph; **rewrite CLAUDE.md's "The accepted residual,
+  residual" paragraph; **rewrite AGENTS.md's "The accepted residual,
   precisely"** so the non-atomic-walk bullet is *replaced* — the lookup window
   is gone, and the creation-side residual (D22) takes its place, stated as
   precisely as the bullets around it. The proposal's claim and that section
@@ -200,7 +200,7 @@ group 1 now produces.
   that names `New`, and a failure of any of those is logged rather than
   reported; `write_file` gets the same flushes as `create_note` in both
   overwrite modes
-- [x] 2.9 CLAUDE.md: state the durability contract for both paths and the
+- [x] 2.9 AGENTS.md: state the durability contract for both paths and the
   asymmetry in the failure direction, in the transfer and anchored-write
   sections
 
@@ -349,7 +349,7 @@ not in a merge.
     `/health` creates no file in the vault
   - an abandoned fallback upload leaves a `.tmp-*` file that the existing
     24-hour sweep collects
-- [x] 3.8 CLAUDE.md: extend "The no-clobber publish never exposes a staging
+- [x] 3.8 AGENTS.md: extend "The no-clobber publish never exposes a staging
   name at all" to cover the transfer path, **scoped to the mode the probe
   selects where `O_TMPFILE` works**, and record the overwrite path's in-gate
   window. Add the fallback beside it (D27): one flag for both write paths,
@@ -450,7 +450,7 @@ these tasks were started.
   `pending`; a vault with no nested mount behaves exactly as before; a `statx`
   stubbed to return no mount-id bit refuses rather than falling back to
   `st_dev` or to the errno
-- [x] 4.8 CLAUDE.md: record the envelope in the transfer section — publication
+- [x] 4.8 AGENTS.md: record the envelope in the transfer section — publication
   into a mount beneath the vault root is refused before any body where the
   boundary already exists at mint or fetch start, and pre-publication inside
   the gate (after the body, before the link or rename) where it appears

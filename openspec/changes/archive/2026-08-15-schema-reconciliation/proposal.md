@@ -30,7 +30,7 @@ regression gate for schema/model agreement. Issue #53.
   head and asserts `alembic check` reports no diffs; and a second case that
   simulates the live drift (create the schema at 012 minus the constraint and
   with nullable columns) and asserts 013 reconciles it.
-- `CLAUDE.md`: note that `alembic check` must be clean and how to run it.
+- `AGENTS.md`: note that `alembic check` must be clean and how to run it.
 
 ## Capabilities
 
@@ -46,6 +46,6 @@ _None._
 
 ## Impact
 
-- `alembic/versions/013_schema_reconciliation.py`, `tests/integration/test_schema_check.py`, `CLAUDE.md`, `Makefile` (optional `make db-check` target running `alembic check` in the container).
+- `alembic/versions/013_schema_reconciliation.py`, `tests/integration/test_schema_check.py`, `AGENTS.md`, `Makefile` (optional `make db-check` target running `alembic check` in the container).
 - Deploy: `make deploy` runs the migration before recreating the container; the migration is a metadata-only change on small tables (no rewrite of `usage_logs` rows is needed since no NULLs exist — verified on the live DB: 0 NULLs in all nine columns, 0 CHECK violations across 16 clients).
 - Adversarial-Codex trigger: data-integrity migration on a live database.

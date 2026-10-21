@@ -39,4 +39,4 @@ This is **non-breaking** — purely additive tools and a new table.
 - **APIs**: Five new MCP tools. No changes to existing tool signatures.
 - **Performance**: Indexer does one extra parse pass per changed note (~µs each); link upsert batched with the existing 100-row batches. Backlinks query uses the `(target_note_id)` index — fast even at 100K links. Neighborhood is BFS bounded by `depth` and `limit`.
 - **Dependencies**: None new. Wikilink parsing is a regex.
-- **Docs**: Project `CLAUDE.md` gets a short note on the new tools; vault `CLAUDE.md` may benefit from guidance on when an agent should call `get_neighborhood` vs `find_related` vs `search`.
+- **Docs**: Project `AGENTS.md` gets a short note on the new tools; vault `CLAUDE.md` may benefit from guidance on when an agent should call `get_neighborhood` vs `find_related` vs `search`.

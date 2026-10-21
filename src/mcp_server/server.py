@@ -624,18 +624,21 @@ async def edit_note(
         readOnlyHint=True, destructiveHint=False, openWorldHint=False
     )
 )
-async def get_vault_guide() -> str:
-    """Returns a two-part guide for working with this Obsidian vault:
+async def get_vault_guide(client: str, topics: list[str] = []) -> str:
+    """Return complete, freshly read guidance files from this selected vault.
 
-    1. **Obsidian primer** — generic syntax (wikilinks, embeds, block refs,
-       heading refs, tags, frontmatter, callouts, comments, highlights,
-       math, mermaid, footnotes, tasks, plugin literals).
-    2. **Vault-specific conventions** — folder structure, naming rules,
-       frontmatter requirements, and tag taxonomy as configured by the
-       vault owner in `CLAUDE.md`. If `CLAUDE.md` is absent, the response
-       includes instructions for creating one.
+    `client` is required: identify the calling application/mode (e.g. `codex`,
+    `chatgpt-chat`), not the model. It is caller-declared context, not authority.
+    Names are exact, case-sensitive ASCII letters/digits/hyphens/underscores,
+    starting with a letter or digit. Omit `topics` or pass [] for base guidance
+    and the generated topic catalog; request catalog names together as needed.
+    Every call includes base files, requested topic files, then additions whose
+    topic AND client match. An unmatched valid client receives common files.
+    Paths are deduplicated in first-occurrence order. Links/includes in files
+    are not followed. Unknown topics or incomplete/oversized guidance refuse
+    the whole guide; there is no implicit instruction file or bundled primer.
     """
-    return await get_vault_guide_impl()
+    return await get_vault_guide_impl(client, topics)
 
 
 @mcp.tool(

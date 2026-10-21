@@ -248,8 +248,8 @@ and ops layer around them.
 - `list_notes(folder?, limit=50)`, sorted by modified time
 - `get_recent(folder?, limit=20)`, recently changed
 - `get_tags(limit=50)`, tag and count
-- `get_vault_guide()`, the Obsidian primer plus this vault's
-  `CLAUDE.md`, served live
+- `get_vault_guide(client, topics=[])`, complete configured vault files and a
+  topic catalog, served live (see [guide configuration](#the-self-describing-vault))
 
 ### Read and write
 - `read_note(path, section?, offset=0, limit?)` returns a **structured
@@ -504,8 +504,8 @@ The difference is where the memory lives and who can open it.
   be left holding if a project stopped being maintained. That's a
   property of files, not something this server does for you.
 - **Self-description.** The rules live in the corpus rather than in
-  client config. `CLAUDE.md` at the vault root tells every agent, on
-  its first call, where things go and what frontmatter they carry, so
+  client config. Configured vault instruction files tell every agent, on
+  a guide call, where things go and what frontmatter they carry, so
   conventions are versioned next to the notes they govern.
 
 What the hosted shape buys you in exchange is real, and worth saying
@@ -810,9 +810,10 @@ claude mcp add obsidian --transport http \
   --header "Authorization: Bearer omcp_..."
 ```
 
-The first thing any agent should do in a new session is call
-`get_vault_guide()`. That's how it learns your folder structure,
-naming conventions, and YAML schema before it writes anything.
+An agent can load base guidance and discover configured topics with
+`get_vault_guide(client="claude-code")`. Request the relevant catalog topics
+together when more guidance is needed, for example
+`get_vault_guide(client="claude-code", topics=["editing"])`.
 
 ## Upgrading
 
@@ -820,6 +821,15 @@ Pull, then `make deploy` (or rebuild your compose stack); migrations
 run on start. Read this first when upgrading across the internal-transport
 and panel-CSP release:
 
+- **Breaking: vault guidance now requires a file map and a client argument.**
+  Install the intended guide files in each selected vault, configure
+  `VAULT_GUIDE_CONFIG` (see [below](#the-self-describing-vault)), recreate the
+  selected updated MCP service, then refresh cached connector/tool metadata
+  before relying on the guide. Calls to
+  `get_vault_guide()` without `client` fail argument validation. There is no
+  implicit `CLAUDE.md` lookup, bundled primer or compatibility switch. Missing
+  configuration refuses guide calls; malformed configured maps refuse startup.
+  Existing guide text must be deliberately moved into mapped vault files.
 - **Breaking: the server refuses to run as a PostgreSQL superuser
   (#324).** A Compose install created from `docker-compose.simple.yml` or
   `docker-compose.proxy.yml` before this release connects as the cluster
@@ -890,19 +900,56 @@ wrong folder. Bare-date filenames collide with templates. Wrong tags
 break Dataview queries. The data layer works fine; the context layer
 is where the failures show up.
 
-The fix is small. Keep a machine-readable instruction file
-(`CLAUDE.md` at the vault root) that describes the system's own rules.
-Expose it as a dedicated tool. Every connecting agent calls it once at
-the start of a session and immediately knows how the vault works.
-Update the file, every agent sees the change on the next call. No
-client-side config. No system-prompt injection. The vault is
-authoritative about its own rules.
+Keep instructions in vault files and configure their assembly in the deployment's
+`VAULT_GUIDE_CONFIG` JSON environment setting. A minimal synthetic example:
 
-`get_vault_guide()` does exactly this. It returns a generic Obsidian
-primer (wikilink syntax, embed syntax, tag conventions, common plugin
-literals) plus the vault's `CLAUDE.md` live. The hint to call it first
-is baked into the write-tool descriptions so the agent gets pulled
-into the right behavior even without prompting.
+```dotenv
+VAULT_GUIDE_CONFIG='{"base":{"files":["AGENTS.md"]},"topics":{"editing":{"files":["Guides/Editing.md"]},"attachments":{"files":["Guides/Attachments.md"],"clients":{"chatgpt-chat":{"files":["Guides/Chat attachments.md"]}}}}}'
+```
+
+`base.files` must be nonempty. `topics` and each topic's `clients` map may be
+omitted; every file group requires a `files` list. Unknown fields, duplicate
+JSON keys, wrong types and unsafe paths are refused. Paths are visible,
+canonical printable vault-relative POSIX file paths (maximum 1,024 characters): no
+absolute paths, backslashes, empty/dot/hidden components or control characters.
+Filesystem containment and visibility guards also apply when files are read.
+
+Call `get_vault_guide(client="codex")` for base files and the generated topic
+catalog. Every call includes base files, requested topic files in request
+order, then matching client additions in requested-topic order. Paths are
+deduplicated at first occurrence. A client addition requires both its enclosing
+topic and the exact client match: `chatgpt-chat` attachment additions are absent
+from editing-only/bootstrap calls and other clients' attachment calls.
+Selectors start with an ASCII letter/digit and contain only ASCII letters,
+digits, hyphens and underscores; matching is case-sensitive. Unknown topics
+are explicit errors. A valid unmatched client gets common guidance only.
+`client` identifies the calling application/mode, not its model or permissions;
+authenticated selected-vault admission remains the access boundary.
+
+The tool reads each selected file freshly through the selected-vault filesystem
+service and returns its full UTF-8 text, including frontmatter, under a source
+path label. It does not follow links/includes or use the search index or a
+content cache. All instruction body text comes from mapped vault files; the
+server generates only headings, the topic catalog and diagnostics. Reusable
+policies and syntax references belong in operator-maintained vault files.
+
+Missing configuration produces an explicit incomplete-guide refusal while
+allowing the server's other functions to start. A configured malformed map
+fails settings validation at startup. Missing, unreadable, unsafe, empty or
+invalid UTF-8 files refuse the entire guide without returning partial content.
+`MAX_FILE_READ_BYTES` bounds each read; `MAX_READ_RESPONSE_CHARS` bounds the
+whole assembled response, including labels and catalog. Overflow refuses the
+whole guide instead of truncating instructions. Correct the map/files or adjust
+the existing limits, then retry. Configuration/file failures use the existing
+`validation_failed` body-refusal code; aggregate size overflow uses `size_limit`,
+and invalid/unknown selectors use `invalid_argument`. Tool-schema failures
+(such as missing `client`) happen before body admission and usage logging.
+
+The map is per server deployment; in multi-user mode the same relative map is
+resolved independently inside each authenticated caller's vault. Install the
+mapped files in every served vault. Changing environment configuration requires
+recreating the selected MCP container/service; a plain restart does not adopt
+changed Compose environment. Changing file text takes effect on the next call.
 
 ## Multi-user mode
 

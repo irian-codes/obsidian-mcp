@@ -43,7 +43,7 @@ or `note_links` rows.
 
 #### Scenario: No exemptions for vault content or vault metadata
 - **WHEN** the same credential calls any registered tool, including
-  `get_vault_guide` (which returns the vault's own `CLAUDE.md`) and
+  `get_vault_guide` (which returns configured files from the vault) and
   `check_upload` (which reports a published vault path, size and digest)
 - **THEN** the call SHALL be refused
 

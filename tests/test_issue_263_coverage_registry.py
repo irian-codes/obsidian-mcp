@@ -2,7 +2,7 @@
 
 This registry checks references stay live; referenced tests establish behavior.
 It deliberately does not claim every tool has a body refusal: search/list empty
-answers are successes, and get_vault_guide has no returned body-refusal branch.
+answers are successes. Guide configuration and required-file errors are typed refusals.
 """
 import ast
 from pathlib import Path
@@ -15,7 +15,7 @@ COVERAGE = {
     'get_tags': [('success', 'test_issue_263_tool_outcomes.py::test_metadata_empty_successes_and_graph_body_refusals')],
     'get_recent': [('success', 'test_issue_263_tool_outcomes.py::test_metadata_empty_successes_and_graph_body_refusals')],
     'semantic_search': [('success', 'test_issue_200_tool_render.py::test_an_all_stale_result_set_survives_and_says_so')],
-    'get_vault_guide': [('success', 'test_file_access_tools.py::test_guide_mentions_file_tools')],
+    'get_vault_guide': [('success', 'test_vault_guide.py::test_bootstrap_is_full_base_only'), ('refused', 'test_vault_guide.py::test_missing_config_refuses_and_logs_body_outcome')],
     'create_note': [('refused', 'test_issue_263_tool_outcomes.py::test_actual_creation_refusal_keeps_bytes_and_records_one_outcome')],
     'get_backlinks': [('refused', 'test_issue_263_tool_outcomes.py::test_metadata_empty_successes_and_graph_body_refusals')],
     'get_links': [('refused', 'test_issue_263_tool_outcomes.py::test_metadata_empty_successes_and_graph_body_refusals')],

@@ -195,7 +195,7 @@ CALLS = [
     ('list_notes', 'list_notes_impl', lambda s: ((), {})),
     ('get_tags', 'get_tags_impl', lambda s: ((), {})),
     ('get_recent', 'get_recent_impl', lambda s: ((), {})),
-    ('get_vault_guide', 'get_vault_guide_impl', lambda s: ((), {})),
+    ('get_vault_guide', 'get_vault_guide_impl', lambda s: (('test-client',), {})),
     ('get_backlinks', 'get_backlinks_impl', lambda s: (('b.md',), {})),
     ('get_links', 'get_links_impl', lambda s: (('a.md',), {})),
     ('get_neighborhood', 'get_neighborhood_impl', lambda s: (('a.md',), {})),

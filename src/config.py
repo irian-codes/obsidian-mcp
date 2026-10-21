@@ -16,6 +16,7 @@ from pydantic.fields import FieldInfo
 from pydantic_settings import BaseSettings, NoDecode, PydanticBaseSettingsSource
 
 from src.services.transport_security import normalise_db_ssl_mode
+from src.vault_guide_config import VaultGuideConfig, parse_guide_config
 
 
 # ── One representation for "off" ────────────────────────────────────────────
@@ -366,6 +367,10 @@ class Settings(BaseSettings):
     # reproduces the pre-batching request shape, one chunk per request.
     ollama_embed_batch_size: int = Field(16, ge=1, le=256)
     vault_path: str = "/obsidian"
+    # Missing maps refuse guide calls; configured maps validate at startup.
+    vault_guide_config: Annotated[
+        VaultGuideConfig | None, NoDecode, BeforeValidator(parse_guide_config)
+    ] = Field(default=None, repr=False)
     secret_key: str = "changeme"
     index_interval_seconds: int = Field(300, ge=1)
     # Consecutive failures of any indexer counter (a scope's index passes, its

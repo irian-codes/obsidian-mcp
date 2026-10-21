@@ -137,29 +137,6 @@ def _security_subject() -> str:
     return security_events.subject_for(user_id=current_user_id.get())
 
 
-_VAULT_GUIDE_PRIMER = (Path(__file__).parent / "vault_guide_primer.md").read_text(
-    encoding="utf-8"
-)
-
-_NO_CLAUDE_MD_MESSAGE = (
-    "# Vault-Specific Conventions\n"
-    "\n"
-    "No `CLAUDE.md` found at the vault root. To teach the agent about your\n"
-    "folder structure, file-naming conventions, tag taxonomy, required\n"
-    "frontmatter fields, or task-management syntax, create a `CLAUDE.md`\n"
-    "file at the root of your vault. The agent will pick it up automatically\n"
-    "on the next call.\n"
-    "\n"
-    "Suggested sections:\n"
-    "\n"
-    "- **Folder structure** — what lives where, and where new notes belong.\n"
-    "- **Naming conventions** — how filenames are formatted.\n"
-    "- **Frontmatter** — required and conventional YAML fields.\n"
-    "- **Tag taxonomy** — top-level tags and their meaning.\n"
-    "- **Task syntax** — any GTD/Dataview/checklist conventions in use.\n"
-)
-
-
 def _actor_columns() -> dict:
     """The denormalised actor for this request's `usage_logs` row, or `{}`.
 
@@ -998,8 +975,8 @@ def _vault_admission_error() -> str | None:
     the individual tools: resolve the root **once, before the body runs**, and
     fail the whole call if it cannot be resolved. Every `_tracked` tool reads
     or writes vault content or vault metadata, so there is nothing to exempt —
-    `get_vault_guide` reads the vault's `CLAUDE.md`, `check_upload` reports a
-    vault path. Fail closed and keep the list at zero.
+    `get_vault_guide` reads configured files from the vault; `check_upload`
+    reports a vault path. Fail closed and keep the list at zero.
 
     Single-user mode is untouched: `current_user_id` is None there (the
     sentinel's `id` is None and sandbox mode never sets it), and `_vault_root`
@@ -2476,21 +2453,14 @@ async def semantic_search_impl(
 
 
 @_tracked("get_vault_guide", [])
-async def get_vault_guide_impl() -> str:
-    """Return the Obsidian primer plus any vault-specific conventions from CLAUDE.md."""
-    uid = current_user_id.get()
+async def get_vault_guide_impl(client: str, topics: list[str] = []) -> str:
+    """Return complete configured files for this caller's vault and selection."""
+    from src.services.vault_guide import GuideError, assemble_guide
+
     try:
-        note = read_file("CLAUDE.md", user_id=uid)
-        vault_section = (
-            "# Vault-Specific Conventions\n"
-            "\n"
-            f"{note['content']}"
-        )
-    except FileNotFoundError:
-        vault_section = _NO_CLAUDE_MD_MESSAGE
-    except ValueError as e:
-        vault_section = f"# Vault-Specific Conventions\n\n{e}"
-    return f"{_VAULT_GUIDE_PRIMER}\n\n---\n\n{vault_section}"
+        return assemble_guide(client, topics, current_user_id.get())
+    except GuideError as exc:
+        return _body_refusal(str(exc), exc.code)
 
 
 # ══════════════════════════════════════════════════════════════════════════

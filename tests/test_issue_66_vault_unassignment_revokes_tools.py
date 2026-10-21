@@ -176,7 +176,7 @@ def _refusal_text(result, tool_name: str) -> str:
 
 @pytest.mark.parametrize("tool", _registered_tools(), ids=lambda t: t.name)
 def test_unassigned_user_is_refused_by_every_registered_tool(as_unassigned_user, tool):
-    """No exemptions. `get_vault_guide` returns the vault's own CLAUDE.md and
+    """No exemptions. `get_vault_guide` returns configured files from the vault and
     `check_upload` reports a published vault path, so every registered tool
     reads or writes vault content or vault metadata."""
     result, params, _ = _run_capturing_log(lambda: tool.fn(**_dummy_args(tool.fn)))

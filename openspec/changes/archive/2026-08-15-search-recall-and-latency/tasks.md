@@ -3,7 +3,7 @@
 - [x] 1.1 `src/services/embeddings.py::semantic_search`: add `SET LOCAL hnsw.iterative_scan = 'relaxed_order'` after the existing two `SET LOCAL`s, with a comment explaining post-filter candidate loss, that recall is bounded by `hnsw.max_scan_tuples`/`scan_mem_multiplier`, and that the Python re-sort is presentation-only. Select the cosine distance as a column and re-sort rows by it ascending before the per-note dedupe/truncate.
 - [x] 1.2 `src/mcp_server/tools.py::find_related_impl`: same `SET LOCAL`, overfetch changed to `max(limit * 5, 50)`, same re-sort before dedupe, same zero-row exact fallback (`SET LOCAL enable_indexscan = off` re-run) when a `user_id`-scoped query returns nothing.
 - [x] 1.2b `src/services/embeddings.py::semantic_search`: zero-row exact fallback — if any filter is active and the HNSW query returns no rows, re-execute the identical statement after `SET LOCAL enable_indexscan = off` and use its rows; record `exact_fallback` in the timing holder.
-- [x] 1.3 `src/main.py` lifespan: `_check_pgvector_version()` next to `_check_embedding_dim()` — `SELECT extversion FROM pg_extension WHERE extname='vector'`, parse major.minor.patch, `sys.exit(1)` with a message naming `hnsw.iterative_scan` and `0.8.0` if lower; skipped in sandbox mode. Document in `CLAUDE.md` next to the dim guard.
+- [x] 1.3 `src/main.py` lifespan: `_check_pgvector_version()` next to `_check_embedding_dim()` — `SELECT extversion FROM pg_extension WHERE extname='vector'`, parse major.minor.patch, `sys.exit(1)` with a message naming `hnsw.iterative_scan` and `0.8.0` if lower; skipped in sandbox mode. Document in `docs/architecture/indexing-and-embeddings.md` next to the dim guard.
 - [x] 1.4 Unit tests (fake session capturing statements): both paths issue the three `SET LOCAL`s before the select; dedupe output is in non-decreasing distance order when the fake returns rows out of order; version guard exits on `0.7.4`, passes on `0.8.2`, skips in sandbox.
 
 ## 2. Keyword plan
@@ -31,7 +31,7 @@
 ## 6. Verification & ship
 
 - [x] 6.1 `openspec validate search-recall-and-latency --strict`.
-- [x] 6.2 `openspec-verifier` audit; adversarial Codex pass framed per `CLAUDE.md` (search result correctness). Iterate to no BLOCKER/MAJOR.
+- [x] 6.2 `openspec-verifier` audit; adversarial Codex pass framed per `AGENTS.md` (search result correctness). Iterate to no BLOCKER/MAJOR.
 - [x] 6.3 Pre-deploy: capture live results for one unfiltered `semantic_search`, one folder-filtered one that is short/empty today, one `keyword_search`.
 - [x] 6.4 `make deploy`; `make status`; re-issue the three queries; verify filtered results are now consistent with unfiltered; verify `usage_logs` rows carry `embed_ms`/`db_ms`; observe one pre-warm log line. Record tools called.
 - [x] 6.5 Tell the operator: raise `shared_buffers` on the shared Postgres (128 MB → 2–4 GB) — outside this repo (filed as GitHub issue #55).

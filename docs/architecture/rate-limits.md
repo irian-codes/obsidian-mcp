@@ -1,7 +1,7 @@
 # Rate limits: principals, buckets, and the shape of a refusal
 
-> Deep rationale originally extracted from `CLAUDE.md`; current developer
-> conventions live in [AGENTS.md](../../AGENTS.md). Read before touching
+> Architecture rationale. Current developer conventions live in
+> [AGENTS.md](../../AGENTS.md). Read before touching
 > `src/services/rate_limits.py`, `src/services/refusals.py`, the failed-auth
 > budget in `src/mcp_server/auth.py`, the gate order in `_tracked`
 > (`src/mcp_server/tools.py`), or any `MCP_RATE_LIMIT_*` /

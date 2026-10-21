@@ -36,7 +36,7 @@ another vault, the metadata-only tools — `semantic_search`, `keyword_search`,
 filtered by `user_id` alone — answer from the *previous* vault: its paths,
 titles, tags, frontmatter and chunk excerpts. `read_note` on one of those paths
 then either fails or, worse, returns a genuinely different note that happens to
-occupy the same relative path in the new root. CLAUDE.md names "silently wrong
+occupy the same relative path in the new root. AGENTS.md names "silently wrong
 search results" as one of the two expensive failures in this product, because
 an agent acts on them without a human ever seeing the query.
 
@@ -89,7 +89,7 @@ rows were scanned from* — with an escalating series of substitutions: a
 pathname, then a device-and-inode pair, then a kernel file handle, then a
 bit-identical clone of the filesystem presenting the same handle at the same
 pathname. Every round's fix was correct and every round's next attack was also
-correct, which is precisely the signal CLAUDE.md names: **a heuristic
+correct, which is precisely the signal AGENTS.md names: **a heuristic
 pretending to be a rule**, absorbing another round of tuning each time. Proving
 directory identity across time from userspace is unwinnable by construction —
 a clone is indistinguishable from the original by every fact the kernel will
@@ -308,7 +308,7 @@ where they should:
   This is round 3's blocker and it is now a declared non-goal rather than an
   absorbing hardening loop.
 
-**Which error the design prefers, said plainly.** CLAUDE.md ranks silently
+**Which error the design prefers, said plainly.** AGENTS.md ranks silently
 wrong search results above expensive ones, so ambiguity never resolves toward
 *keeping*: only an exact match of both recorded facts keeps, and even that is
 demoted by a handle that disagrees. Ambiguity also never resolves toward the
@@ -507,7 +507,7 @@ a *readable* note the user edits gets a fresh `content_hash` every pass, its
 `semantic_search` reads `chunk_text` with **no** `embedded_content_hash =
 content_hash` guard (`embeddings.py:353`). One bad file would have made that
 user's semantic search silently wrong, indefinitely, for an agent consumer that
-acts on the result without a human seeing the query — the failure CLAUDE.md
+acts on the result without a human seeing the query — the failure AGENTS.md
 ranks above every expensive one. The re-derive branch does *not* do
 `embed_vault`'s job the way it does the other two, precisely because it keeps
 `note_embeddings` and makes no embedding call; so this was the one gate whose
@@ -608,7 +608,7 @@ already reads and hashes **100%** of the vault's files, so the re-derive adds
 only the parse-and-upsert of the notes an ordinary pass would have `continue`d
 past, plus one link re-extraction — and **zero embedding calls** for unchanged
 content. Against that, a discard on this vault means re-embedding ~16.7k chunks
-serially through Ollama bge-m3; CLAUDE.md's own figures (a 14 s cold provider
+serially through Ollama bge-m3; docs/architecture/indexing-and-embeddings.md's own figures (a 14 s cold provider
 reload, a ≈0.47 s warm `semantic_search` that includes one embed) put a single
 chunk in the hundreds of milliseconds, so 16.7k of them is **tens of minutes per
 assigned user**, during which `semantic_search` answers from a shrinking
@@ -802,7 +802,7 @@ provenance. `embed_vault` is the exception for the opposite reason — its work
 
 **Rejected: infer provenance by overlapping the recorded relative paths with the
 files found under the assigned root.** A threshold on a heuristic — high overlap
-"means" the same root — and CLAUDE.md is explicit that a heuristic pretending to
+"means" the same root — and AGENTS.md is explicit that a heuristic pretending to
 be a rule should ship behind a flag or in shadow mode rather than absorb another
 round of threshold tuning. Its failure direction is also the wrong one: two
 vaults that share a directory layout produce a high overlap and a silent keep.
@@ -815,7 +815,7 @@ vaults that share a directory layout produce a high overlap and a silent keep.
 allowed to lose their target while the log row stays, and both do so on the
 operator's most urgent path.
 
-**The transfer routes were not covered, and CLAUDE.md records the gap as
+**The transfer routes were not covered, and docs/architecture/usage-attribution.md records the gap as
 known.** `src/transfer/routes.py::_log_row` builds its own `UsageLog` from the
 *minting* identity carried on the `transfer_tokens` row: `key_id`,
 `oauth_token_id`, `user_id`, and nothing else. There is no request-scoped actor

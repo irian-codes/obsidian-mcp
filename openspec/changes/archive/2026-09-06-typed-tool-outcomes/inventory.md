@@ -493,4 +493,4 @@ A final AST/manual diff sweep must check every added `str(outcome)`, f-string, c
 
 ## Read scope and boundaries
 
-Reviewed CLAUDE.md/shared workflow plus relevant usage-attribution, security-event logging, vault-tool publication and transfer contracts. This task authorizes an implementation/PR, not a change to HTTP transfer redemption status contracts, quota ordering, write preconditions, filesystem permissions, accepted limits, R10 durability-warning policy or mutation behavior. No new migrations, dependencies or network services are necessary for #263.
+Reviewed AGENTS.md/shared workflow plus relevant usage-attribution, security-event logging, vault-tool publication and transfer contracts. This task authorizes an implementation/PR, not a change to HTTP transfer redemption status contracts, quota ordering, write preconditions, filesystem permissions, accepted limits, R10 durability-warning policy or mutation behavior. No new migrations, dependencies or network services are necessary for #263.

@@ -6,7 +6,7 @@ ASVS V2.4.1 (#323, medium). API keys can be created through two routes that do t
 
 The extra keys are not only extra rows. Every new key is a new MCP principal, and a new principal starts with full general (30) and write (15) bursts. A form submitted with the limit field blank creates a key with **no daily quota**. Creating keys repeatedly therefore resets both per-principal velocity buckets and gets around the daily quota. Those are the two controls `mcp-rate-limits` and `usage-quotas` set up to bound one credential's work.
 
-The documented rule "an explicit null, or a blank panel field, means unlimited" (CLAUDE.md, `usage-quotas`, `panel-usage-slicing`) is the reason a scripted blank is a way to bypass the quota. The owner has decided to change it. A blank or omitted limit gets `DEFAULT_DAILY_REQUEST_LIMIT`. Only an administrator can create an unlimited key, and must ask for it explicitly.
+The documented rule "an explicit null, or a blank panel field, means unlimited" (docs/agent-reference.md, `usage-quotas`, `panel-usage-slicing`) is the reason a scripted blank is a way to bypass the quota. The owner has decided to change it. A blank or omitted limit gets `DEFAULT_DAILY_REQUEST_LIMIT`. Only an administrator can create an unlimited key, and must ask for it explicitly.
 
 ## What Changes
 
@@ -22,7 +22,7 @@ The documented rule "an explicit null, or a blank panel field, means unlimited" 
   - With `DEFAULT_DAILY_REQUEST_LIMIT` null, a blank or omitted create limit is **refused** ("a daily request limit is required"). It no longer silently becomes unlimited.
   - A non-admin request that asks for unlimited is refused with no key written and no budget charged, and records `panel_forbidden` (`reason=unlimited_requires_admin`).
 - **Panel template and `panel.js`.** The Unlimited checkbox goes into the create and edit modals. A `data-unlimited-toggle` delegated listener disables the number input while the box is ticked. The template gets new help copy. The nonce CSP rules apply: no inline handlers or styles, and no `!important`.
-- **Docs.** `docs/architecture/rate-limits.md` (new control-table row, a budget section, settings, the account/address key spaces), `docs/architecture/control-panel.md`, the CLAUDE.md key-decisions bullet, the README settings table and quota paragraph, `.env.example`, and `docs/architecture/security-event-logging.md`.
+- **Docs.** `docs/architecture/rate-limits.md` (new control-table row, a budget section, settings, the account/address key spaces), `docs/architecture/control-panel.md`, the docs/agent-reference.md key-decisions bullet, the README settings table and quota paragraph, `.env.example`, and `docs/architecture/security-event-logging.md`.
 
 ## Capabilities
 

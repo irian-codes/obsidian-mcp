@@ -56,7 +56,7 @@ an ownership dodge, and it would stand even if A and C ran sequentially:
   write probes — and after `atomic-beneath-root-writes` its containment
   contract is `openat2(RESOLVE_BENEATH | RESOLVE_NO_SYMLINKS |
   RESOLVE_NO_MAGICLINKS)`: **no** symbolic link anywhere in the path, ever.
-  CLAUDE.md is explicit that relaxing that walk to follow in-vault links "would
+  docs/architecture/vault-tools.md is explicit that relaxing that walk to follow in-vault links "would
   weaken the primitive `/transfer/*` depends on".
 - The indexer needs the opposite leaf policy and must keep it: a markdown file
   reached through a symbolic link is indexed today, and `Path.rglob` already
@@ -929,7 +929,7 @@ was found wrong. Dispositions:
    like every pre-017 row and degrading only if the credential is later
    deleted. Recorded as a declared residual in 017's docstring, in the
    schema-integrity delta (a requirement symmetric with 016's treatment) and in
-   CLAUDE.md. No Makefile change and no deployment barrier: the window is
+   docs/architecture/usage-attribution.md. No Makefile change and no deployment barrier: the window is
    seconds long, the fallback works, and quiescing the service for a column
    addition and a small backfill trades a real ongoing availability cost
    against it.
@@ -973,7 +973,7 @@ was found wrong. Dispositions:
 Two non-blocking items from the independent verifier were folded in with these:
 the silent link-extraction skip in `_update_links_for_changed` (a changed path
 with no index row) now records a skip like its sibling, with a test and a spec
-scenario; and CLAUDE.md gained register sections for the #88 confirmation and
+scenario; and docs/agent-reference.md gained register sections for the #88 confirmation and
 the #91 provenance record.
 
 ### Adversarial round 2
@@ -1031,7 +1031,7 @@ wrong.
    transaction before any child write (the safe parent→child direction) and is
    therefore left waiting; a test asserts that ordering so it cannot drift.
 
-Both spec deltas and CLAUDE.md were updated to describe the lease, the permit's
+Both spec deltas and docs/architecture/indexing-and-embeddings.md were updated to describe the lease, the permit's
 unforgeability and expiry, the two-ended move rule, the exclusion-branch
 certification, and the asymmetric lock discipline between the discard head and
 the re-derive tail.
@@ -1092,7 +1092,7 @@ row id, so the null stamp is the repair rather than a replacement row.
 machine with no PostgreSQL: both statements that change `file_path` are parsed
 out of the source and required to clear the column.
 
-The index-integrity delta and CLAUDE.md's #91 section both state the
+The index-integrity delta and docs/architecture/indexing-and-embeddings.md's #91 section both state the
 invalidation rule; neither did before.
 
 

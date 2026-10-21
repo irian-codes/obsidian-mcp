@@ -42,7 +42,7 @@
 - [x] 6.1 Add a `_graph_stats(session)` helper in `src/control_panel/routes.py` returning `total_links`, `dangling_links`, `orphan_count`, top 5 most-linked-to notes
 - [x] 6.2 Pass the stats into the dashboard template; update `dashboard.html` with a "Graph" section
 - [x] 6.3 Add a "Link extraction in progress" indicator visible while the startup backfill is running (set a module-level flag in the indexer that the dashboard reads)
-- [x] 6.4 Add new tool descriptions to project `CLAUDE.md` under a "Graph tools" subsection so the next architectural review reflects the change
+- [x] 6.4 Add new tool descriptions to project `docs/agent-reference.md` under a "Graph tools" subsection so the next architectural review reflects the change
 
 ## 7. Verification
 

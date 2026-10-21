@@ -108,5 +108,5 @@ _None._
   concurrent worst-case writes, which is far beyond this single-operator
   deployment's real concurrency — accepted and documented.
 - No DB migration. `alembic check` run once after the 1.19 bump.
-- Adversarial-Codex trigger per `CLAUDE.md`: touches the write path
+- Adversarial-Codex trigger per `AGENTS.md`: touches the write path
   (transport limit; `edit_note`/`set_frontmatter` size check).

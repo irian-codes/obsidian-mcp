@@ -150,7 +150,7 @@ For `[[Path/With/Slashes]]`, treat as a path attempt: try `<target>.md` then `<t
    - On subsequent runs, links are kept current incrementally as part of normal indexing.
 3. Add the five MCP tools and register them.
 4. Update the dashboard template + a small route to compute graph stats.
-5. Update project `CLAUDE.md` with new tool descriptions.
+5. Update project `docs/agent-reference.md` with new tool descriptions.
 
 **Rollback:** Drop the `note_links` table and remove the new tools. The metadata/embedding pipelines do not depend on links, so a partial rollback is safe.
 

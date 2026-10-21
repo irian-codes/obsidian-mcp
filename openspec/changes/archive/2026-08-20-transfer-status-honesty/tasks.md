@@ -108,7 +108,7 @@
       `locked_rows_ok`), `test_an_ownerless_upload_token_gets_the_uniform_404`,
       `test_an_ownerless_download_token_gets_the_uniform_404`
 - [x] 5b.5 Document the accepted limitation that mint-time credential
-      validation is an unlocked `SELECT` (design.md + CLAUDE.md)
+      validation is an unlocked `SELECT` (design.md + docs/architecture/file-transfer.md)
 
 ## 6. Documentation and spec
 
@@ -116,7 +116,7 @@
 - [x] 6.2 Update the `check_upload`, `request_upload` and `request_download`
       tool docstrings in `server.py` — they carried the same falsehood the tool
       did, and said nothing about the credential clamp
-- [x] 6.3 Update the "File transfer" section of `CLAUDE.md`
+- [x] 6.3 Update the "File transfer" section of `docs/architecture/file-transfer.md`
 - [x] 6.4 `openspec validate transfer-status-honesty --strict` passes
 - [x] 6.5 Full unit suite green, and `tests/integration/test_transfer_pg.py`
       green against a throwaway `pgvector/pgvector:pg16`

@@ -48,7 +48,7 @@ _None._
 
 - `src/auth/passwords.py`, `requirements.txt`, tests. Callers
   (`src/auth/routes.py`, `src/control_panel/users.py`) unchanged.
-- Auth code → adversarial-Codex pass per `CLAUDE.md`.
+- Auth code → adversarial-Codex pass per `AGENTS.md`.
 - Deploy: no migration; existing hashes verify. Post-deploy: log in to the
   panel once (or exercise `POST /admin/auth/login` with the test user) and
   change a password back and forth.

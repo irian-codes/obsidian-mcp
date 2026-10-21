@@ -60,7 +60,7 @@ Unit tests (fake-session pattern of `tests/test_issue_182_refresh_reuse.py`) for
 - [x] 5.1 `docs/architecture/oauth-and-grants.md`: new sections for code replay (D5–D9, risk window) and absolute lifetime (D1–D4, D10); correct the #194 section's "a used `oauth_codes` row is deleted the instant it is spent"; accepted limitations L1–L11.
 - [x] 5.2 `docs/architecture/schema-and-migrations.md`: 029 — the two columns, why `grant_issued_at` has a server default when 025 refused one, the AST guard, backfill value.
 - [x] 5.3 `docs/architecture/security-event-logging.md`: the two new events and the new reason codes.
-- [x] 5.4 `CLAUDE.md` key decisions: one bullet — absolute grant lifetime (`OAUTH_GRANT_ABSOLUTE_LIFETIME_DAYS`, 90, not disable-able, issuance inherited like `grant_id`) and code-replay family revocation after full revalidation, spent codes retained 7 days past expiry.
+- [x] 5.4 `docs/agent-reference.md` key decisions: one bullet — absolute grant lifetime (`OAUTH_GRANT_ABSOLUTE_LIFETIME_DAYS`, 90, not disable-able, issuance inherited like `grant_id`) and code-replay family revocation after full revalidation, spent codes retained 7 days past expiry.
 - [x] 5.5 `.env.example`: commented `OAUTH_GRANT_ABSOLUTE_LIFETIME_DAYS=90` with range and why there is no off value.
 - [x] 5.6 `README.md` settings table: the new row.
 - [x] 5.7 `docs/architecture/file-transfer.md`: the OAuth credential's effective expiry is `min(expires_at, grant deadline)` at mint, redemption and pre-publication.

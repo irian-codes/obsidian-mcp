@@ -456,7 +456,7 @@ behaviour recorded above, this section wins.
    `test_the_first_publication_probe_sweeps_stale_staging`.
 
 9. **MINOR — the "no timing-distinct branches" claim was not true and not
-   tested.** Removed from `design.md`, `CLAUDE.md` and the route docstring; the
+   tested.** Removed from `design.md`, `docs/architecture/file-transfer.md` and the route docstring; the
    uniform-404 guarantee is about the status and body only. No code change.
 
 10. **NIT — `test_body_is_not_read_before_the_claim` counted nothing.** It now

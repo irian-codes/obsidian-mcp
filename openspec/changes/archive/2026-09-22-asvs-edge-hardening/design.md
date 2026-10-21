@@ -19,7 +19,7 @@ Facts established by reading the live host (read-only `docker inspect`, `docker 
 
 Constraints the change must respect:
 
-- `docker-compose.yml` is **public** and the deploy-directory copy must stay byte-identical (`CLAUDE.md`, "Public repo — host paths live outside the tree"). No hostname, no subnet, no host path may be written into it; `${MCP_HOSTNAME}` is the only spelling of the host.
+- `docker-compose.yml` is **public** and the deploy-directory copy must stay byte-identical (`docs/agent-reference.md`, "Public repo — host paths live outside the tree"). No hostname, no subnet, no host path may be written into it; `${MCP_HOSTNAME}` is the only spelling of the host.
 - The host's Traefik **static** configuration lives outside this repo. A control expressed there is not reproducible from the tree — the same reasoning already recorded in the `docker-compose.yml` comment that rejects a Traefik `ratelimit` middleware.
 - `--workers 1` is load-bearing. Every existing rate control is in-process worker memory (`docs/architecture/rate-limits.md`). A new one inherits that contract and no other.
 - Security-event fields are allow-listed **per event**, caller-supplied values are **never** suppressor subjects, and every record is bounded by the formatter (`docs/architecture/security-event-logging.md`).

@@ -1,7 +1,7 @@
 # Control panel
 
-> Deep rationale originally extracted from `CLAUDE.md`; current developer
-> conventions live in [AGENTS.md](../../AGENTS.md). Read before touching panel templates, flash messages, the admin guards, or the Danger zone.
+> Architecture rationale. Current developer conventions live in
+> [AGENTS.md](../../AGENTS.md). Read before touching panel templates, flash messages, the admin guards, or the Danger zone.
 
 ## The panel CSP, and vendored assets
 

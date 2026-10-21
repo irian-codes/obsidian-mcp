@@ -157,7 +157,7 @@ Real Postgres (`tests/integration/`):
 
 ## Risks / Trade-offs
 
-- **[A behaviour change for operators who clear the box to get unlimited]** → The help copy says so. An admin has the checkbox. A non-admin who wants unlimited asks an admin. CLAUDE.md, the README and the specs all change in this PR.
+- **[A behaviour change for operators who clear the box to get unlimited]** → The help copy says so. An admin has the checkbox. A non-admin who wants unlimited asks an admin. docs/agent-reference.md, the README and the specs all change in this PR.
 - **[A shared NAT with many users hitting 20/hour]** → Not plausible for a key-creation route. The setting is tunable.
 - **[An admin locked out of creating keys for up to an hour by their own script]** → The window heals by itself, and a restart clears it, as with the login budget.
 

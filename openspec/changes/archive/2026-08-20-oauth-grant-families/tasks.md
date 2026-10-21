@@ -67,7 +67,7 @@
 
 ## 10. Adversarial round 3 (Codex: 1 MAJOR accepted, 1 MINOR, 1 NIT)
 
-- [x] 10.1 MAJOR **accepted as a documented limitation** — a request authenticated just before a revoke/downgrade commits still runs its tool with the stale permission. Holding the grant lock across tool execution would trade bounded, sub-second staleness for unbounded contention on every request; recorded in design.md and the CLAUDE.md OAuth section
+- [x] 10.1 MAJOR **accepted as a documented limitation** — a request authenticated just before a revoke/downgrade commits still runs its tool with the stale permission. Holding the grant lock across tool execution would trade bounded, sub-second staleness for unbounded contention on every request; recorded in design.md and the docs/architecture/oauth-and-grants.md OAuth section
 - [x] 10.2 MINOR — 014's pre-existing-index lookup is schema-qualified: table resolved to an OID, index resolved by name **in that table's namespace**, more than one match fatal. A shadow-schema index of the same name no longer refuses a healthy database
 - [x] 10.3 NIT — the hidden-history line reads "earlier inactive token(s)" instead of naming only two of the three inactive reasons
 

@@ -1,7 +1,7 @@
 # Usage attribution
 
-> Deep rationale originally extracted from `CLAUDE.md`; current developer
-> conventions live in [AGENTS.md](../../AGENTS.md). Read before touching `usage_logs`, `_log_usage`, or the actor columns on `transfer_tokens`.
+> Architecture rationale. Current developer conventions live in
+> [AGENTS.md](../../AGENTS.md). Read before touching `usage_logs`, `_log_usage`, or the actor columns on `transfer_tokens`.
 
 ## Usage attribution is denormalised, because the credential can be deleted
 

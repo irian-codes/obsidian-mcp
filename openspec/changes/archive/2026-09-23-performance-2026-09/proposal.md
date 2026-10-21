@@ -86,7 +86,7 @@ None. Every requirement modifies or extends an existing capability.
   - S4 must not start before S2 and S3 merge: 027 chains from 026 and edits `semantic_search` after S2.
 - **Docs**
   - `docs/architecture/{rate-limits,usage-attribution,vault-roots-and-tenancy,search,indexing-and-embeddings,schema-and-migrations}.md`.
-  - The CLAUDE.md key-decisions list.
+  - The docs/agent-reference.md key-decisions list.
 
 ## Spec review
 

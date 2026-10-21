@@ -37,4 +37,4 @@
 
 - [x] 6.1 `.venv/bin/python -m pytest -q tests/` green offline; integration modules against a throwaway pgvector server green (`PGVECTOR_TEST_ADMIN_URL`).
 - [x] 6.2 `openspec validate silently-wrong-search-127 --strict` clean.
-- [x] 6.3 CLAUDE.md: update the "Filtered vector search" fallback wording (owner predicate counts as a filter) and the indexer sections touched.
+- [x] 6.3 docs/architecture/search.md: update the "Filtered vector search" fallback wording (owner predicate counts as a filter) and the indexer sections touched.

@@ -22,7 +22,7 @@ expensive failure this server has.
 `src/services/vault_fs.py` already solved this shape for `/transfer/*` and
 `delete_file` — walk from an open root descriptor, one `O_NOFOLLOW` component
 at a time, and operate relative to the descriptor. This change brings the note
-write path onto the same footing. It was recorded in CLAUDE.md as an accepted
+write path onto the same footing. It was recorded in docs/architecture/vault-tools.md as an accepted
 limitation pending exactly this work.
 
 ## What Changes

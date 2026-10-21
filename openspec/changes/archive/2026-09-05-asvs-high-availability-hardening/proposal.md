@@ -1,6 +1,6 @@
 ## Why
 
-The 2026-09-04 OWASP ASVS 5.0 assessment (Claude workflow plus Codex cross-family pass, every finding independently verified with measurements) left four high-severity findings open, all of the same shape: **one authenticated tenant can stall or kill the single-worker process for every other tenant with ordinary, in-cap input.** Production is multi-user, so each is a cross-tenant availability failure — one of the four expensive failures named in `CLAUDE.md`.
+The 2026-09-04 OWASP ASVS 5.0 assessment (Claude workflow plus Codex cross-family pass, every finding independently verified with measurements) left four high-severity findings open, all of the same shape: **one authenticated tenant can stall or kill the single-worker process for every other tenant with ordinary, in-cap input.** Production is multi-user, so each is a cross-tenant availability failure — one of the four expensive failures named in `AGENTS.md`.
 
 - **#180** — the wikilink, markdown-link, and `move_note` rewrite regexes are quadratic in line length (20 KB of `[[` = 18 s), and the frozen v0 fence cleaner is quadratic in the number of unclosed fences; all run synchronously on the event loop inside the indexer.
 - **#203** — link extraction has no cap: one 10 MiB note of `[[a]] ` yields 1.75 M links, 6 s of regex on the loop and an 802 MiB peak; the indexer accumulates link rows across every changed note in a pass before inserting, so N such notes cost N × 802 MiB against a 2 GB container; `write_file` accepts a 25 MiB `.md` that the indexer then reads.

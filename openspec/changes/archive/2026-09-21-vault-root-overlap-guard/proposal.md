@@ -159,7 +159,7 @@ with the directory it describes.
   `docs/architecture/vault-tools.md`,
   `docs/architecture/indexing-and-embeddings.md`,
   `docs/architecture/control-panel.md`,
-  `docs/architecture/usage-attribution.md`, `README.md`, `CLAUDE.md`.
+  `docs/architecture/usage-attribution.md`, `README.md`, `docs/agent-reference.md`.
 - No schema change, no migration, no `alembic check` movement.
 - Production runs `multi_user_mode=True` with two users at sibling roots, so the
   guard is expected to be inert on the live deployment; the live check is that

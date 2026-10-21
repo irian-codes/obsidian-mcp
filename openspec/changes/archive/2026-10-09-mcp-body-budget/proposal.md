@@ -119,7 +119,7 @@ None.
   limitations), `docs/architecture/vault-tools.md` (size caps: the fourth
   cap), `docs/architecture/file-transfer.md` (the URL cap),
   `docs/architecture/security-event-logging.md` (the new `reason` value),
-  `CLAUDE.md` key decisions, `.env.example`.
+  `docs/agent-reference.md` key decisions, `.env.example`.
 - Out of scope: `/transfer/upload` streams to disk and is already bounded by
   `TRANSFER_MAX_CONCURRENT_UPLOADS`. Sandbox mode bypasses `APIKeyMiddleware`
   entirely and stays exempt.

@@ -2,7 +2,7 @@
 
 **#295** — every MCP tool silently drops arguments it does not declare. FastMCP 1.29 builds each tool's argument model on `ArgModelBase`, whose `model_config` sets no `extra`, so pydantic's default `ignore` applies; the advertised `inputSchema`s carry no `additionalProperties: false`, so a client cannot catch it up front either. Observed live: `semantic_search {"query": …, "user_id": 2}` and `keyword_search {"query": …, "foo": "bar"}` return normal results.
 
-This is not an isolation bypass (tenancy is bound to the credential; `user_id`/`vault` had no effect). It is a **silently-wrong-results** failure, which CLAUDE.md names as one of the two expensive failures for this product: an agent that writes `folders=` for `folder=`, or passes `frontmatter` to a tool that has no such filter, gets unfiltered results, believes they are filtered, and acts on them with no human in the loop. A wrong *type* on a known argument is already refused; only extra names pass.
+This is not an isolation bypass (tenancy is bound to the credential; `user_id`/`vault` had no effect). It is a **silently-wrong-results** failure, which AGENTS.md names as one of the two expensive failures for this product: an agent that writes `folders=` for `folder=`, or passes `frontmatter` to a tool that has no such filter, gets unfiltered results, believes they are filtered, and acts on them with no human in the loop. A wrong *type* on a known argument is already refused; only extra names pass.
 
 ## What Changes
 

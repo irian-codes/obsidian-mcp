@@ -83,7 +83,7 @@ proposal, established:
    - `write_file(encoding="text")` whose JSON-escaped content is ≤ the limit;
      realistic prose in any script (≤ 2×) fits with defaults. Content whose
      escaping exceeds the limit is **unsupported in text mode**: documented in
-     the docstring and `CLAUDE.md`, with base64 mode named as the always-safe
+     the docstring and `docs/architecture/vault-tools.md`, with base64 mode named as the always-safe
      path.
 
    Everything else — an envelope over 1 MiB, `set_frontmatter` arguments that

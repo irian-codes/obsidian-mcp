@@ -31,7 +31,7 @@ at another vault, the metadata-only tools — `semantic_search`, `keyword_search
 filtered by `user_id` alone — answer from the *previous* vault: its paths, its
 titles, its tags, its frontmatter, its chunk excerpts. `read_note` on one of
 those paths then either fails or, worse, returns a genuinely different note that
-happens to occupy the same relative path in the new root. CLAUDE.md names
+happens to occupy the same relative path in the new root. docs/agent-reference.md names
 "silently wrong search results" as one of the two expensive failures in this
 product, because an agent acts on them without a human ever seeing the query.
 

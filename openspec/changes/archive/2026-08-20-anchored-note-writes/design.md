@@ -269,7 +269,7 @@ checked per component, not for the path as a whole.
 
 This is inherited rather than introduced: the transfer routes and `delete_file`
 have walked this way since D6, and #59 did not change the walk. It is recorded
-here, in the `vault` module docstring and in CLAUDE.md's residual list because
+here, in the `vault` module docstring and in docs/architecture/vault-tools.md's residual list because
 it is now the *last* redirection window in the write path, and because the
 sections around it claim redirection is closed.
 

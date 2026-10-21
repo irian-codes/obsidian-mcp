@@ -1,7 +1,7 @@
 # File transfer
 
-> Deep rationale originally extracted from `CLAUDE.md`; current developer
-> conventions live in [AGENTS.md](../../AGENTS.md). Read before touching `src/transfer/`, `src/services/vault_fs.py`, or the mint/redeem tools.
+> Architecture rationale. Current developer conventions live in
+> [AGENTS.md](../../AGENTS.md). Read before touching `src/transfer/`, `src/services/vault_fs.py`, or the mint/redeem tools.
 
 ## MCP tool annotations
 

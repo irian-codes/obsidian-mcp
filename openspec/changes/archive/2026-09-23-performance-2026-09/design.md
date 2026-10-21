@@ -259,7 +259,7 @@ Round 1 (Codex, against `75e5d58`) returned **REJECT**, with 2 MAJOR and 5 MINOR
 
 ## Adversarial review focus
 
-These are search-correctness surfaces. Per CLAUDE.md, a change to the chunking/embedding path or to search is a mandatory adversarial-pass trigger. Codex should be told to *attack* each surface below.
+These are search-correctness surfaces. Per AGENTS.md, a change to the chunking/embedding path or to search is a mandatory adversarial-pass trigger. Codex should be told to *attack* each surface below.
 
 1. **Stat shortcut (D10–D12).** Find any sequence of filesystem operations in which the recorded stat matches while the bytes differ, beyond D11's list. Check that the recorded stat always comes from before the read, on the same descriptor. Check that the racy rule cannot be bypassed by a future timestamp. Check that the backstop really runs at startup and when the interval elapses, for every scope. Check that the shortcut is never taken under `re_derive`, a stale marker, a NULL stat, or a full-hash pass. Check that the unchanged-hash stat refresh cannot record a stat for bytes other than the ones hashed.
 2. **Walk before lock (D9).** Try to construct an interleaving with `move_note`, another container's pass, a reset or a rebuild in which a row is pruned, paired as a move, or left certified on the strength of the pre-lock walk. Check that C2 holds: no snapshot transaction may be open across the walk or the lock wait. Check that a deferral under re-derive withholds the stamp.

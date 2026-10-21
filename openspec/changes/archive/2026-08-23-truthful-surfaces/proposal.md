@@ -78,7 +78,7 @@ is gated on `is_admin` alone and so is visible to the sentinel.
 
 The refusal sits under the *existing* `_lock_admin_guard(session)` advisory
 lock and *after* the existing `_actor_still_privileged(session, user)` re-check.
-No second lock key: CLAUDE.md is explicit that two keys do not exclude each
+No second lock key: docs/architecture/control-panel.md is explicit that two keys do not exclude each
 other, and the whole point of `_ADMIN_GUARD_LOCK_KEY` is that a delete and an
 edit can each remove the other's "remaining admin". Placing the self-check
 after `_actor_still_privileged` also keeps the diagnostics in the right order —

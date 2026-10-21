@@ -15,7 +15,7 @@ the capped `note_links` rows persist indefinitely. `get_links`,
 `get_backlinks` and `get_neighborhood` would go on answering from that set as
 though it were complete — a silently wrong graph answer handed to an agent that
 acts on it without a human ever seeing the query, which is the failure mode
-this server ranks highest (`CLAUDE.md`). The marker has to be as durable as the
+this server ranks highest (`AGENTS.md`). The marker has to be as durable as the
 truncation it describes, so it lives on the row.
 
 Nor is it a skip. A.7a's skip list withholds a re-derive's certification, and a

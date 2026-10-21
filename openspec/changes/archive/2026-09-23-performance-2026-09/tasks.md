@@ -259,7 +259,7 @@ The work is five slices. Each is implemented by an independent Opus subagent in 
 - [x] 6.1 Merge in dependency order: S1 and S2 (any order), then S3, then S4, then S5 once #284 has merged. After each merge, resolve the region seams named above. **Result:** Done: wave 1 = S1+S2+S3 (PR #292), wave 2 = S4+S5 (PR #293); no conflicts.
 - [x] 6.2 Check the seams by grepping for production callers of every new export: `apply_user_vault_row`, `_scan_vault`, `vector_index.*`, `close_provider_client`, the two index settings and the batch setting. None may be green-but-unwired. **Result:** Done (verifier seam checks, both waves).
 - [x] 6.3 On the merged tree, run once: `make test-schema`, then `make test-integration`, then the offline suite, then `make audit`. These are authoritative; the per-worktree runs are not. **Result:** Done: wave 1 offline 5,502 / schema 211 / integration 668; wave 2 offline 5,544 / schema 221 / integration 685; audit green in CI.
-- [x] 6.4 Supervisor: update the docs/agent-reference.md key decisions with one bullet per surface: async bookkeeping commits (L1/L2), the stat shortcut and its backstop (perf-L3), and the `halfvec` index if it shipped. **Result:** Done.
+- [x] 6.4 Supervisor: update the AGENTS.md key decisions with one bullet per surface: async bookkeeping commits (L1/L2), the stat shortcut and its backstop (perf-L3), and the `halfvec` index if it shipped. **Result:** Done.
 
 ## 7. Verification by non-authors
 

@@ -1,7 +1,6 @@
 # Vault roots, tenancy, and the admission gate
 
-> Architecture rationale. Current developer conventions live in
-> [AGENTS.md](../../AGENTS.md). Read before touching `APIKeyMiddleware`, `_vault_root`, the owner predicates, or anything that publishes into a vault.
+> Deep rationale extracted from `AGENTS.md`. Read before touching `APIKeyMiddleware`, `_vault_root`, the owner predicates, or anything that publishes into a vault.
 
 ## The vault assignment is the admission gate for every tool
 

@@ -40,7 +40,7 @@ The 2026 ASVS follow-up filed two medium findings against the OAuth token endpoi
 - `src/services/indexer.py` — `cleanup_expired_tokens` code predicate.
 - `src/services/security_events.py` — two new catalogue events.
 - `src/config.py`, `.env.example`, `README.md` settings table.
-- Docs: `docs/architecture/oauth-and-grants.md`, `docs/architecture/schema-and-migrations.md`, `docs/architecture/file-transfer.md`, `docs/agent-reference.md` key decisions.
+- Docs: `docs/architecture/oauth-and-grants.md`, `docs/architecture/schema-and-migrations.md`, `docs/architecture/file-transfer.md`, `AGENTS.md` key decisions.
 - Tests: unit + real-Postgres (`tests/integration/`), schema gate cases for 029.
 - Behaviour visible to users: every existing connector must re-authorize once, ~90 days after deploy, and every new one 90 days after its code exchange (seconds after consent). A client that retries a code exchange whose response it lost now loses that grant (RFC 6749 §4.1.2) and re-authorizes.
 - Mandatory adversarial Codex pass (auth/token surface). Owner browser pass on the consent page with devtools open; zero CSP violations.

@@ -177,7 +177,7 @@ contains the proposal commit. For S2, also confirm that
   non-parsing logging transform.
 - [x] 5.4 `docs/architecture/security-event-logging.md`: the
   `mcp_concurrency_pressure` row gains `reason` `body:memory`.
-- [x] 5.5 `docs/agent-reference.md` key decisions: one bullet. The `/mcp` body budget is
+- [x] 5.5 `AGENTS.md` key decisions: one bullet. The `/mcp` body budget is
   always on, has no shadow mode and no off switch, is derived from the cgroup
   limit × 0.5 ÷ 8, refuses to boot when a maximum write cannot fit, keeps a
   small lane, waits up to 15 s, and refuses with a transport 429 outside

@@ -1,5 +1,5 @@
 ## Context
-`validate_path` returns `(vault/rel).resolve()`; `validate_visible_path` adds the dot-dir check on the resolved relative path. Every write then uses that resolved `Path`, so a symlink is transparently followed. `delete_file` (#50) instead canonicalises lexically and walks with `O_NOFOLLOW`. Migrating all note writes to the anchored helper is the long-term follow-up recorded in docs/architecture/vault-tools.md; this change is the minimal, safe step: refuse the one dangerous shape.
+`validate_path` returns `(vault/rel).resolve()`; `validate_visible_path` adds the dot-dir check on the resolved relative path. Every write then uses that resolved `Path`, so a symlink is transparently followed. `delete_file` (#50) instead canonicalises lexically and walks with `O_NOFOLLOW`. Migrating all note writes to the anchored helper is the long-term follow-up recorded in AGENTS.md; this change is the minimal, safe step: refuse the one dangerous shape.
 
 ## Goals / Non-Goals
 Goals: no mutating tool can act on a file other than the one named; symlinked directories inside the vault keep working; clear error messages. Non-goals: anchored (`dir_fd`) rewrite of `_atomic_write`; changing read behaviour; symlink support policy for the indexer.

@@ -88,7 +88,7 @@ human's browser does the transfer, and it composes with the future
   mint tools refuse with an error naming both settings when it is unset.
 - **Docs:** `get_vault_guide` primer gains a short "getting files in and out"
   section (`request_upload` → give the human the link → `check_upload`;
-  embed with `![[path]]` via `edit_note`); `docs/architecture/file-transfer.md` gains a "File transfer"
+  embed with `![[path]]` via `edit_note`); `AGENTS.md` gains a "File transfer"
   section and the Traefik label note.
 - Out of scope (follow-ups): MCP Apps in-chat drop-zone (needs SDK 2.0 /
   extension support and a claude.ai custom-connector spike), URL-mode
@@ -127,7 +127,7 @@ human's browser does the transfer, and it composes with the future
   (mount router), `src/config.py`, `src/models/db.py`, `docker-compose.yml`
   **and** `$(DEPLOY_DIR)/docker-compose.yml` (Traefik api-router rule gains
   `PathPrefix(\`/transfer\`)`), `src/mcp_server/vault_guide_primer.md`,
-  `docs/architecture/file-transfer.md`, `README.md`.
+  `AGENTS.md`, `README.md`.
 - Security surface: one new unauthenticated-by-session route family on the
   public host, authorized solely by 256-bit, header-carried, single-use /
   short-TTL capability tokens bound to a pre-committed path, root, identity

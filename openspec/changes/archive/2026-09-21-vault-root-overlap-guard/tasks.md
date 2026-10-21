@@ -16,7 +16,7 @@ Owned-file map, for the pre-flight check:
 | 4 | `src/mcp_server/tools.py`, `src/services/usage_stats.py`, `tests/test_tools_overlap_refusal.py` |
 | 5 | `src/services/transfer.py`, `tests/test_transfer_overlap_gate.py` |
 | 6 | `src/control_panel/routes.py`, `src/control_panel/templates/dashboard.html`, `src/control_panel/templates/health.html`, `tests/test_panel_overlap_surface.py` |
-| 7 | `docs/architecture/*.md`, `README.md`, `docs/agent-reference.md` |
+| 7 | `docs/architecture/*.md`, `README.md`, `AGENTS.md` |
 
 **Existing tests that resolve a vault root** are owned by the slice whose
 production file they exercise. They are listed because every one of them runs
@@ -98,7 +98,7 @@ slice-1 fixture and some need their expectations re-read:
 - [x] 6.6 **E4:** `_reindex_background` calls `indexer.detect_root_overlaps("panel on-demand")` at its top — the shared wrapper around `detect_and_publish()`, which is what logs and swallows a detection failure rather than aborting the caller — before `index_pass_lock` is taken, so Reindex Now, re-embed and reset-embeddings cannot start a pass against an unchecked snapshot. This file is owned here, so the call site lands in this slice; the helper it calls comes from slice 1 and the stage skip from slice 3.
 - [x] 6.7 Tests: the strip names every affected account, its reason and its root for an admin; **the pair is still named from the snapshot's recorded facts after the peer's assignment is corrected and after the peer row is deleted, before the next detection publishes**; a non-admin sees no other account's name or path; an empty snapshot renders nothing; the never-published state renders the not-yet-checked note; the handler opens no directory; `vault_page` empty state; `_reindex_background` publishes before taking the pass lock.
 
-## 7. Documentation — `docs/architecture/*.md`, `README.md`, `docs/agent-reference.md`
+## 7. Documentation — `docs/architecture/*.md`, `README.md`, `AGENTS.md`
 
 - [x] 7.1 `docs/architecture/vault-roots-and-tenancy.md`: the two checks and what each does and does not prove, **including L1 and L2 written out as residuals with their destructive consequence** and a pointer to the follow-up issue; the two enforcement points and the five pass entry points; the readiness state and why the lifespan detection is synchronous; the refuse-only exception to "`_vault_root` is a pure cache lookup", written so a future reader cannot take it as licence to add a query; the disposition and why index refusal alone is not it.
 - [x] 7.2 `docs/architecture/vault-tools.md`: correct the `RESOLVE_NO_XDEV` paragraph — the omission is a containment non-issue for one tenant and is exactly what makes a nested second tenant reachable; say plainly that a *grafted* second tenant (L1) is still reachable and is tracked in the follow-up.
@@ -106,7 +106,7 @@ slice-1 fixture and some need their expectations re-read:
 - [x] 7.4 `docs/architecture/control-panel.md`: the condition on the strip and the health page, the two reasons' separate wording, the quarantined state on the users list, and why the operator surfaces name everything while the tool refusal names nothing.
 - [x] 7.5 `docs/architecture/usage-attribution.md`: the new markers and their membership in the pre-body-refusal predicate.
 - [x] 7.6 `README.md`: extend the existing "the `vault_path` validator does not resolve symlinks" paragraph with what is now caught — and, in the same paragraph, with L1 and L2: a bind mount grafting a peer's vault inside another tenant's root is **not** detected, and the consequence is full cross-tenant read, overwrite and delete.
-- [x] 7.7 `docs/agent-reference.md`: one line under Key decisions.
+- [x] 7.7 `AGENTS.md`: one line under Key decisions.
 
 ## 8. Verification
 

@@ -1,7 +1,6 @@
 # Vault tools: writes, reads, section addressing, size caps
 
-> Architecture rationale. Current developer conventions live in
-> [AGENTS.md](../../AGENTS.md). Read before touching any note or file tool — this is the destructive-write surface.
+> Deep rationale extracted from `AGENTS.md`. Read before touching any note or file tool — this is the destructive-write surface.
 
 ## MCP tool annotations
 

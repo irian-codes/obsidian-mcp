@@ -28,7 +28,7 @@
 
 ## 6. Docs
 
-- [x] 6.1 `docs/architecture/indexing-and-embeddings.md` (prefix protection, indeterminate root, permission), `docs/architecture/control-panel.md` (the new action — done), `DEPLOYMENT.md` pitfall + L1, `docs/deployment-kubernetes.md` troubleshooting row, `docs/agent-reference.md` key-decisions bullet
+- [x] 6.1 `docs/architecture/indexing-and-embeddings.md` (prefix protection, indeterminate root, permission), `docs/architecture/control-panel.md` (the new action — done), `DEPLOYMENT.md` pitfall + L1, `docs/deployment-kubernetes.md` troubleshooting row, `AGENTS.md` key-decisions bullet
 
 ## 7. Gates
 

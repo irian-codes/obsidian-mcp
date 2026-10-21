@@ -39,7 +39,7 @@ Two pre-code Codex reviews have run against this design — round 1 FAIL (2 BLOC
 
 - New: `src/logging_setup.py`, `src/services/security_events.py`, `docs/architecture/security-event-logging.md`.
 - Changed: `src/main.py`, `src/mcp_stdio.py`, `src/config.py`, `src/services/error_log.py`, `src/mcp_server/auth.py`, `src/services/vault.py`, `src/services/quotas.py`, `src/auth/routes.py`, `src/oauth/routes.py`, `src/mcp_server/tools.py`, `src/services/usage_stats.py`, `src/csrf.py`, `src/control_panel/routes.py`, `src/control_panel/users.py`, `src/api/routes.py`, `src/transfer/routes.py`, `src/services/transfer.py`, `src/services/usage_filters.py`, `src/control_panel/templates/usage.html`. `src/oauth/grants.py` is deliberately unchanged.
-- Docs: `docs/agent-reference.md` (index row), `docs/architecture/usage-attribution.md` (marker register), `docs/architecture/control-panel.md` (buffer survival, usage outcome), `docs/architecture/file-transfer.md` (refusal logging beside the uniform 404).
+- Docs: `AGENTS.md` (index row), `docs/architecture/usage-attribution.md` (marker register), `docs/architecture/control-panel.md` (buffer survival, usage outcome), `docs/architecture/file-transfer.md` (refusal logging beside the uniform 404).
 - No schema change, no migration, no new dependency. Log volume rises; the suppressor bounds the hostile case.
 - Closes #190
 - Closes #191

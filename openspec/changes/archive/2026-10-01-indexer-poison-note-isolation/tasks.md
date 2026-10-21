@@ -38,7 +38,7 @@
 
 - [x] 4.1 `docs/architecture/indexing-and-embeddings.md`: NUL rule, quarantine rule, revised floor-failure bullet, "a quarantine is not a read failure", D7 not-indexable rule, D8 re-derive stamp rule (and fix the stale "reads in full" rationale), `vault-tools.md` tag bound — done: NUL rule, D7, D8 (stale rationale fixed), `vault-tools.md` tag bound, `vault-roots-and-tenancy.md` completeness bullet; quarantine section and revised floor-failure bullet (D3 slice)
 - [x] 4.2 `DEPLOYMENT.md` / `README.md`: monitor `/health` `status` by keyword, not status code; new settings
-- [x] 4.3 `docs/agent-reference.md` key-decisions line for the quarantine and `/health` degraded
+- [x] 4.3 `AGENTS.md` key-decisions line for the quarantine and `/health` degraded
 
 ## 5. Gates
 

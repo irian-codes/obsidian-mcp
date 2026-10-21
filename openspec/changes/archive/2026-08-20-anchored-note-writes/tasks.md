@@ -30,7 +30,7 @@
 - [x] 5.2 Update `tests/test_vault_mutation_safety.py` and `tests/test_symlink_mutation_guard.py` where they hooked the old path-based internals, keeping the property each pinned
 - [x] 5.3 Confirm the new tests fail against the pre-change tree. Measured against `6252109` with the final test files: **19 of the 33** cases in `test_anchored_note_writes.py` fail, and **33 of 106** across that file plus `test_symlink_mutation_guard.py` (which includes all 11 swapped-leaf cases). The rest pin guarantees this change preserves rather than introduces, which is why they pass either way. Four of the swapped-leaf cases — `create_note`, `write_file` in both modes, and `move_note`'s destination — also fail against the *first* implementation of this change, which is the gap the review found.
 - [x] 5.4 Module docstring in `src/services/vault.py` stating the remaining residual; `vault_fs` docstring updated to record the adoption
-- [x] 5.5 docs/architecture/vault-tools.md: rewrite "The accepted residual, precisely", the `*_at` paragraph, the `delete_note` trash format and the "Follow-ups" note
+- [x] 5.5 AGENTS.md: rewrite "The accepted residual, precisely", the `*_at` paragraph, the `delete_note` trash format and the "Follow-ups" note
 - [x] 5.6 `openspec validate anchored-note-writes --strict` passes; full suite green
 
 ## 6. Review follow-ups
@@ -40,7 +40,7 @@
 - [x] 6.3 `config.max_move_rewrite_sources()` derives a descriptor budget from `RLIMIT_NOFILE`; the preflight aborts before any mutation rather than letting one move exhaust the process table mid-loop
 - [x] 6.4 `tests/test_symlink_mutation_guard.py` parametrises the swapped-leaf case over all eleven applicable tool/mode combinations; the fd tests assert *peak*, not just post-call
 - [x] 6.5 `src/mcp_server/server.py` and `README.md` state the new `.trash` name form and the `UnsupportedFilesystem` refusal
-- [x] 6.6 Correct the claim that `write_file(overwrite=True)` is guarded by `expected=` (docs/architecture/vault-tools.md and the `vault` module docstring) — it is an unconditional replace
+- [x] 6.6 Correct the claim that `write_file(overwrite=True)` is guarded by `expected=` (AGENTS.md and the `vault` module docstring) — it is an unconditional replace
 - [x] 6.7 Note on `validate_mutable_path` that it has no production caller and why it is kept
 
 ## 7. Adversarial-review follow-ups
@@ -51,7 +51,7 @@
 - [x] 7.4 `move_note` `lstat`s the destination after the rename and rolls back a directory or symlink with a second `RENAME_NOREPLACE`, leaving the database untouched and naming the recovery location if the rollback fails
 - [x] 7.5 Read the symlink through the parent descriptor for the refusal message; say "the link changed" rather than naming a possibly-wrong target when it cannot be read
 - [x] 7.6 Wrap the closing leaf `lstat` in `open_mutable` so an `EIO` cannot leak the root and parent descriptors
-- [x] 7.7 Document — in the `vault` module docstring, docs/architecture/vault-tools.md and the design note — that an adversary holding the *destination directory* can still win the overwrite rename, and why that is outside the ancestor/root threat #59 addresses
+- [x] 7.7 Document — in the `vault` module docstring, AGENTS.md and the design note — that an adversary holding the *destination directory* can still win the overwrite rename, and why that is outside the ancestor/root threat #59 addresses
 
 ## 8. Adversarial-review round 2
 
@@ -61,4 +61,4 @@
 - [x] 8.4 `_pin_source_inode` (`O_PATH|O_NOFOLLOW`) before the move; `_verify_the_moved_inode` rolls back only our own inode, reports rather than raises on every post-rename failure, and never updates the database on a refusal
 - [x] 8.5 Remove the descriptor-budget floor; abort the whole move on `EMFILE`/`ENFILE` during the preflight; serialise moves-with-rewrites process-wide with `_MOVE_REWRITE_LOCK`
 - [x] 8.6 Acquire `move_note`'s source and destination targets inside one guard, so a non-`ValueError` failure on the destination closes the source
-- [x] 8.7 Document the inherited non-atomic walk (`open_dir_beneath`, one component at a time) as the remaining redirection window, naming `openat2(RESOLVE_BENEATH|RESOLVE_NO_SYMLINKS|RESOLVE_NO_MAGICLINKS)` as the fix — design D15, `vault` module docstring, docs/architecture/vault-tools.md residual list
+- [x] 8.7 Document the inherited non-atomic walk (`open_dir_beneath`, one component at a time) as the remaining redirection window, naming `openat2(RESOLVE_BENEATH|RESOLVE_NO_SYMLINKS|RESOLVE_NO_MAGICLINKS)` as the fix — design D15, `vault` module docstring, AGENTS.md residual list

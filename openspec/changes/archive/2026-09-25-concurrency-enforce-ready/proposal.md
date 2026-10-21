@@ -151,7 +151,7 @@ None.
   compares the startup INFO line of effective settings.
 - **Docs:** `rate-limits.md`, `usage-attribution.md`,
   `security-event-logging.md`, `control-panel.md` and `schema-and-migrations.md`.
-  docs/agent-reference.md is **not** changed on lease lifetime: the lease still spans
+  AGENTS.md is **not** changed on lease lifetime: the lease still spans
   telemetry.
 - **Out of scope:**
   - the pool size;

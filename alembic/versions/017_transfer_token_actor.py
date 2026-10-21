@@ -5,7 +5,7 @@
 `current_actor` and written by `_log_usage` — because both credential FKs are
 allowed to lose their target while the log row stays, and both do so on the
 operator's most urgent path. **The transfer routes were not covered, and
-docs/architecture/usage-attribution.md recorded the gap as known.**
+AGENTS.md recorded the gap as known.**
 
 `src/transfer/routes.py::_log_row` builds its own `UsageLog` from the *minting*
 identity carried on the `transfer_tokens` row — `key_id`, `oauth_token_id`,

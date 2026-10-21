@@ -1,7 +1,6 @@
 # Schema drift and migrations
 
-> Architecture rationale. Current developer conventions live in
-> [AGENTS.md](../../AGENTS.md). Read before writing or reviewing a migration.
+> Deep rationale extracted from `AGENTS.md`. Read before writing or reviewing a migration.
 
 ## Schema drift is not only what `alembic check` sees
 

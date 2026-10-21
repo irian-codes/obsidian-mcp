@@ -40,8 +40,8 @@
 
 ## 6. Docs and deploy
 
-- [x] 6.1 Update `docs/agent-reference.md` "Key Decisions" and "Stack" sections to describe the provider abstraction and reference the two supported providers
-- [x] 6.2 Add a new "Embedding providers" section to `docs/architecture/indexing-and-embeddings.md` describing config knobs, the reset workflow, and the dimension-mismatch behavior
+- [x] 6.1 Update `AGENTS.md` "Key Decisions" and "Stack" sections to describe the provider abstraction and reference the two supported providers
+- [x] 6.2 Add a new "Embedding providers" section to `AGENTS.md` describing config knobs, the reset workflow, and the dimension-mismatch behavior
 - [x] 6.3 Run `make deploy` against the staging container; verify with `EMBEDDING_PROVIDER=ollama` (default path) that indexing/search still work and embeddings are byte-identical to pre-change output
 - [x] 6.4 Manual smoke-test against OpenAI: set provider=openai with a real test key, run `make reset-embeddings`, confirm a small folder reindexes successfully and `semantic_search` returns sensible results
 

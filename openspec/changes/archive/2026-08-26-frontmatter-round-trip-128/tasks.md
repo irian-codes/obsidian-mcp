@@ -68,4 +68,4 @@
 
 - [x] 5.1 `.venv/bin/python -m pytest -q tests/` green.
 - [x] 5.2 `openspec validate frontmatter-round-trip-128 --strict` clean.
-- [x] 5.3 docs/architecture/vault-tools.md: update the write-tools section (preservation default + flag, section-on-body-or-refuse, set_frontmatter refusal), brief, matching existing style.
+- [x] 5.3 AGENTS.md: update the write-tools section (preservation default + flag, section-on-body-or-refuse, set_frontmatter refusal), brief, matching existing style.

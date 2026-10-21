@@ -29,4 +29,4 @@
 
 ## 5. Documentation
 
-- [x] 5.1 docs/architecture/usage-attribution.md records that usage attribution is denormalised and why the delete was not weakened
+- [x] 5.1 AGENTS.md records that usage attribution is denormalised and why the delete was not weakened

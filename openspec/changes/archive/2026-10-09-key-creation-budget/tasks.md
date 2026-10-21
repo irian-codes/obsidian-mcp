@@ -40,7 +40,7 @@ Slices A and B touch disjoint files and can run in parallel. Slice C depends on 
   - the "default daily limit" section rewritten for the new blank/null semantics.
 - [x] 4.2 `docs/architecture/control-panel.md`: the admin-only Unlimited control, the `data-unlimited-toggle` listener, and the blank-field semantics on create and edit.
 - [x] 4.3 `docs/architecture/security-event-logging.md`: a catalogue row for `key_creation_throttled`, and `unlimited_requires_admin` added to the `panel_forbidden` reasons.
-- [x] 4.4 `docs/agent-reference.md`, key decisions:
+- [x] 4.4 `AGENTS.md`, key decisions:
   - Replace "an explicit `null` (or a blank panel field) still means unlimited" with: a blank or omitted limit gets the default, only an admin creates or restores unlimited via an explicit control or null, and a null default makes the limit required.
   - Add one bullet for the shared account+address key-creation budget and the non-admin active-key cap.
   - Add the new settings to the rate-limits row of the architecture table.

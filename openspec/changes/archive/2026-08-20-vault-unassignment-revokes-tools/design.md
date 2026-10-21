@@ -205,4 +205,4 @@ are told the same thing. `vault.html` is untouched — the `vault_error` empty
 state it already renders is the refusal.
 
 Any future caller that warms and then resolves has this bug. The rule is in
-docs/architecture/vault-roots-and-tenancy.md: use the return value.
+AGENTS.md: use the return value.

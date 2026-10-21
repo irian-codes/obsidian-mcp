@@ -45,7 +45,7 @@ Limiter state is in-process and deliberately not persisted; `--workers 1` remain
 
 - `src/services/refusals.py` (new), `src/services/rate_limits.py` (new), `src/auth/session.py`, `src/mcp_server/auth.py`, `src/mcp_server/tools.py`, `src/config.py`, `src/services/indexer.py` (tick flush), `src/main.py` (shutdown flush), `Dockerfile`.
 - `src/services/usage_stats.py`, `src/services/quotas.py`, `src/services/embeddings.py`, `src/transfer/routes.py`, `src/services/transfer.py`, `src/api/routes.py`, `src/control_panel/routes.py`, `src/control_panel/templates/keys.html`.
-- Docs: new `docs/architecture/rate-limits.md`, plus `docs/architecture/usage-attribution.md`, `docs/architecture/search.md`, `docs/agent-reference.md`, `README.md`, `.env.example`, `docker-compose.yml` (recorded decision).
+- Docs: new `docs/architecture/rate-limits.md`, plus `docs/architecture/usage-attribution.md`, `docs/architecture/search.md`, `AGENTS.md`, `README.md`, `.env.example`, `docker-compose.yml` (recorded decision).
 - Adversarial Codex pass **mandatory**: this change edits the tool execution path and the admission middleware. No migration; `make db-check` still runs after deploy.
 
 Closes #194

@@ -22,7 +22,7 @@ and since #59 every note mutation walks through `open_mutable` and
 the *root* for everything that happens after validation; this is redirection
 during validation itself, and it is the one window that survived. It is
 recorded today as design note D15 of `anchored-note-writes` and as the last
-bullet of docs/architecture/vault-tools.md's "The accepted residual, precisely".
+bullet of AGENTS.md's "The accepted residual, precisely".
 
 **This change closes the lookup and narrows — but does not remove — the
 creation side.** The claim it is entitled to, in the words every artifact of
@@ -49,7 +49,7 @@ because a descriptor keeps naming its directory across a rename. That second
 one is inherent to descriptor anchoring — it is the property #59 relies on —
 so it is *retained*, not introduced here, and it is recorded as such (D26).
 That
-docs/architecture/vault-tools.md bullet is therefore *rewritten*, not deleted.
+AGENTS.md bullet is therefore *rewritten*, not deleted.
 
 **The decision is `openat2(2)` with `RESOLVE_BENEATH | RESOLVE_NO_SYMLINKS |
 RESOLVE_NO_MAGICLINKS`**, reached through `ctypes` as `rename_noreplace`
@@ -75,7 +75,7 @@ caller cannot bypass.
 There is **no silent fallback to the per-component walk**. A containment
 guard that degrades quietly is precisely the failure mode being removed — the
 operator would see a working server and never learn that the property
-docs/architecture/vault-tools.md advertises had stopped holding, and the degradation would be
+AGENTS.md advertises had stopped holding, and the degradation would be
 invisible in every test, because tests run on a kernel that has the syscall.
 
 ### 2. Nothing on the transfer path ever fsyncs (#97)
@@ -234,7 +234,7 @@ records the decision, the threat comparison and the rejected alternative.
   have streamed in full. That is the whole of what this change does about
   nested mounts; the soft delete and the cross-boundary `move_note` are
   enumerated honestly and filed as their own issues (D23).
-- docs/architecture/vault-tools.md's "The accepted residual, precisely" has its non-atomic-walk
+- AGENTS.md's "The accepted residual, precisely" has its non-atomic-walk
   bullet **rewritten**: the lookup window is gone, the creation-side residual
   (D22) takes its place, and the surrounding sections stop deferring to a
   follow-up that has landed.
@@ -715,7 +715,7 @@ kernel never saw.
 
 The requirement therefore asks for the **requested vault-relative path** and
 permits component identification only as explicitly best-effort. Nothing
-load-bearing is lost. docs/architecture/vault-tools.md's promise that a refused symlink is named with
+load-bearing is lost. AGENTS.md's promise that a refused symlink is named with
 its canonical vault-relative target is about the **leaf** — the `os.lstat` of
 the final component that `open_mutable` performs through the parent
 descriptor, so the agent can operate on the real note — and that check is not

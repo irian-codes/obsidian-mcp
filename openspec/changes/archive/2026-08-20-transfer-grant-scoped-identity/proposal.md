@@ -66,7 +66,7 @@ and for OAuth that row is one hour of a principal, not the principal.
 - `tests/integration/test_transfer_pg.py` — `grant_id` in the fixtures, plus a
   handle-scoping section (rotation, multi-hop rotation, second consent, other
   user, other key, vanished presenting token, direction, redemption binding)
-- `docs/architecture/file-transfer.md` — "The handle belongs to the principal, not to the credential row"
+- `AGENTS.md` — "The handle belongs to the principal, not to the credential row"
 
 No migration, no schema change, no config. `Identity` is unchanged, so nothing
 outside the transfer service needed to learn about grants.

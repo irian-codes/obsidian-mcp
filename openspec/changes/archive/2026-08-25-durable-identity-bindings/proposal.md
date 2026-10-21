@@ -608,7 +608,7 @@ already reads and hashes **100%** of the vault's files, so the re-derive adds
 only the parse-and-upsert of the notes an ordinary pass would have `continue`d
 past, plus one link re-extraction — and **zero embedding calls** for unchanged
 content. Against that, a discard on this vault means re-embedding ~16.7k chunks
-serially through Ollama bge-m3; docs/architecture/indexing-and-embeddings.md's own figures (a 14 s cold provider
+serially through Ollama bge-m3; AGENTS.md's own figures (a 14 s cold provider
 reload, a ≈0.47 s warm `semantic_search` that includes one embed) put a single
 chunk in the hundreds of milliseconds, so 16.7k of them is **tens of minutes per
 assigned user**, during which `semantic_search` answers from a shrinking
@@ -815,7 +815,7 @@ vaults that share a directory layout produce a high overlap and a silent keep.
 allowed to lose their target while the log row stays, and both do so on the
 operator's most urgent path.
 
-**The transfer routes were not covered, and docs/architecture/usage-attribution.md records the gap as
+**The transfer routes were not covered, and AGENTS.md records the gap as
 known.** `src/transfer/routes.py::_log_row` builds its own `UsageLog` from the
 *minting* identity carried on the `transfer_tokens` row: `key_id`,
 `oauth_token_id`, `user_id`, and nothing else. There is no request-scoped actor

@@ -30,5 +30,5 @@ Out of scope (recorded in design): a non-empty but *wrong* mount (a different, s
 - `src/services/indexer.py`: `discover_markdown_files_at` (structured failed prefixes), `ScanResult`, `_scan_vault`, `_index_vault_pinned` / `_index_vault_attempt` (indeterminate checks, prune and move-pairing exclusion, quarantine-clear exclusion), `IndexPassResult`, run-record text.
 - `src/services/indexer_health.py`: `walk_incomplete` counter; empty-prune permission registry (in-process, single-use, TTL).
 - `src/control_panel/routes.py` + templates (`settings.html`, `user_edit.html`, a confirm page) + `static/panel.js` if a new `data-*` control is needed.
-- Docs: `docs/architecture/indexing-and-embeddings.md`, `docs/architecture/control-panel.md`, `DEPLOYMENT.md`, `docs/deployment-kubernetes.md`, `docs/agent-reference.md`.
+- Docs: `docs/architecture/indexing-and-embeddings.md`, `docs/architecture/control-panel.md`, `DEPLOYMENT.md`, `docs/deployment-kubernetes.md`, `AGENTS.md`.
 - No migration. Panel templates change → owner browser/CSP pass.

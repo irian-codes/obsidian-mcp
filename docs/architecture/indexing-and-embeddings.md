@@ -1,7 +1,6 @@
 # Indexing and embeddings
 
-> Architecture rationale. Current developer conventions live in
-> [AGENTS.md](../../AGENTS.md). Read before touching the indexer, the embed pass, the tsvector writers, or the panel actions that pause them.
+> Deep rationale extracted from `AGENTS.md`. Read before touching the indexer, the embed pass, the tsvector writers, or the panel actions that pause them.
 
 ## Embedding providers
 - `EMBEDDING_PROVIDER=ollama` (default) — uses `OLLAMA_URL` and

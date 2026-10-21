@@ -1,7 +1,6 @@
 # Search: vector, keyword, and the settings that are correctness
 
-> Architecture rationale. Current developer conventions live in
-> [AGENTS.md](../../AGENTS.md). Read before touching `semantic_search`, `keyword_search`, `find_related`, or any query planner hint. Owner scoping of the read path lives in `vault-roots-and-tenancy.md`.
+> Deep rationale extracted from `AGENTS.md`. Read before touching `semantic_search`, `keyword_search`, `find_related`, or any query planner hint. Owner scoping of the read path lives in `vault-roots-and-tenancy.md`.
 
 ## Search decisions
 

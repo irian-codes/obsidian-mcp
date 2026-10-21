@@ -1,7 +1,7 @@
 ## 1. Config
 
 - [x] 1.1 Add `max_file_read_bytes: int = Field(10 * 1024 * 1024, ge=1)` and `max_file_write_bytes: int = Field(25 * 1024 * 1024, ge=1)` to `Settings` in `src/config.py` (env: `MAX_FILE_READ_BYTES`, `MAX_FILE_WRITE_BYTES`).
-- [x] 1.2 Document both vars in `.env.example` / `.env` docs and in `docs/agent-reference.md`'s key-decisions section.
+- [x] 1.2 Document both vars in `.env.example` / `.env` docs and in `AGENTS.md`'s key-decisions section.
 
 ## 2. Vault service helpers
 

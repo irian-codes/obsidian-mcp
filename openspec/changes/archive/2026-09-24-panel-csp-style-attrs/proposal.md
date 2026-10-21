@@ -40,6 +40,6 @@ None.
 - **Server:** `src/services/panel_csp.py` (`build_policy` and the module docstring). No other Python changes.
 - **Script:** `src/control_panel/static/panel.js` needs no change today. It is only scanned.
 - **Tests:** `tests/test_panel_csp_headers.py` (expected directives, no `'unsafe-inline'` anywhere, rendered-body `style` scan) and `tests/test_panel_csp_templates.py` (static `style` attribute ban, script scan, Chart.js tripwire).
-- **Docs:** `docs/architecture/control-panel.md` (the style-attribute bullet, the "SVG colors ride in `style=""`" bullet, the directive block, the accepted-limitations list), and the panel-CSP bullet in `docs/agent-reference.md`.
+- **Docs:** `docs/architecture/control-panel.md` (the style-attribute bullet, the "SVG colors ride in `style=""`" bullet, the directive block, the accepted-limitations list), and the panel-CSP bullet in `AGENTS.md`.
 - **Gates:** full offline suite, `make test-integration`, `openspec-verifier`, one adversarial Codex round (the change touches the security-header surface on every panel page), the local enforce-mode Playwright pass with its computed-style diff, and the production report-only walk before the enforce flip.
 - Closes #289.

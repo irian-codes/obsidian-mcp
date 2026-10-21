@@ -180,9 +180,10 @@ class User(Base):
     # default changes, so `alembic check` sees nothing. What it *does* change
     # is that the children are no longer loaded — and one of them was relying
     # on that. `usage_logs.key_id` has **no** `ON DELETE` (deliberately; see
-    # CLAUDE.md), and the unloaded-children behaviour of `APIKey.usage_logs`
-    # was what NULLed it. `delete_user` therefore NULLs it explicitly before
-    # deleting the row, exactly as the panel's own key delete already does.
+    # docs/architecture/usage-attribution.md), and the unloaded-children
+    # behaviour of `APIKey.usage_logs` was what NULLed it. `delete_user`
+    # therefore NULLs it explicitly before deleting the row, exactly as the
+    # panel's own key delete already does.
     api_keys: Mapped[list["APIKey"]] = relationship(
         back_populates="user", cascade="all, delete-orphan", passive_deletes=True
     )

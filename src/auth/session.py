@@ -71,7 +71,7 @@ UNSET_VAULT_ROOT = _UnsetVaultRoot()
 # entry — re-admitting a user whose assignment was already revoked, mid-call.
 # A snapshot bound to this request cannot be overwritten by another task, so
 # `_vault_root` prefers it whenever it is set. See "The vault assignment is the
-# admission gate for every tool" in CLAUDE.md.
+# admission gate for every tool" in docs/architecture/vault-roots-and-tenancy.md.
 current_vault_root: ContextVar[tuple[int, Path | None] | _UnsetVaultRoot] = ContextVar(
     "current_vault_root", default=UNSET_VAULT_ROOT
 )

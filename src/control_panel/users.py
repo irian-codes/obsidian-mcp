@@ -831,7 +831,8 @@ async def delete_user(
 
     if permanent:
         # `usage_logs.key_id` has no `ON DELETE` — deliberately, so a log row
-        # outlives the credential that wrote it (see CLAUDE.md, #77). The
+        # outlives the credential that wrote it (see
+        # docs/architecture/usage-attribution.md, #77). The
         # database therefore refuses to cascade-delete an `api_keys` row that a
         # usage log still names, and since `User.api_keys` is
         # `passive_deletes=True` the ORM no longer NULLs those references on

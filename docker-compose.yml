@@ -81,10 +81,10 @@ services:
       # where it can count only the 401s. (2) This one router also serves
       # /transfer, /health and /.well-known, so any label here would throttle
       # all four surfaces together. (3) The host's Traefik STATIC config lives
-      # outside this repo (see CLAUDE.md, "Public repo — host paths live
-      # outside the tree"), so a control expressed there would not be
-      # reproducible from the tree. The per-principal token buckets and the
-      # per-address auth budget are in-process — see
+      # outside this repo (see docs/agent-reference.md, "Public repo —
+      # host paths live outside the tree"), so a control expressed there
+      # would not be reproducible from the tree. The per-principal token
+      # buckets and the per-address auth budget are in-process — see
       # docs/architecture/rate-limits.md, and note that `--workers 1` in the
       # Dockerfile is load-bearing for them.
       - "traefik.http.routers.obsidian-mcp-api-rtr.entrypoints=https"

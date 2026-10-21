@@ -1,6 +1,7 @@
 # Vault tools: writes, reads, section addressing, size caps
 
-> Deep rationale extracted from `CLAUDE.md`. Read before touching any note or file tool — this is the destructive-write surface.
+> Deep rationale originally extracted from `CLAUDE.md`; current developer
+> conventions live in [AGENTS.md](../../AGENTS.md). Read before touching any note or file tool — this is the destructive-write surface.
 
 ## MCP tool annotations
 

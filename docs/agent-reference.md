@@ -1,5 +1,10 @@
 # Obsidian MCP Server
 
+Complete developer reference for [AGENTS.md](../AGENTS.md), the canonical
+entry point for Claude and Codex. Read both before working in this repository.
+Code and configuration paths in inline code are relative to the repository root;
+Markdown links are relative to this document.
+
 Self-hosted MCP server exposing an Obsidian vault (~2,577 markdown files) via semantic search, full-text search, and agentic exploration.
 
 ## Stack
@@ -13,7 +18,7 @@ Self-hosted MCP server exposing an Obsidian vault (~2,577 markdown files) via se
     Azure OpenAI / OpenAI-compatible base URLs
 - Jinja2 control panel; Chart.js vendored under
   `src/control_panel/static/vendor/`, no CDN, hand-written CSS, **nonce-based
-  CSP** (`PANEL_CSP`) — see [control panel](docs/architecture/control-panel.md).
+  CSP** (`PANEL_CSP`) — see [control panel](architecture/control-panel.md).
 
 ## Project Layout
 - `src/main.py` — FastAPI app, lifespan, MCP mount
@@ -67,13 +72,13 @@ hostnames) must stay out of tracked files. The mechanism:
   pgvector container (run before any deploy that carries a migration)
 - `make audit` — pip-audit dependency scan
 - `make reindex` / `make reset-embeddings` / `make rebuild-tsvectors` — index
-  maintenance (see [indexing and embeddings](docs/architecture/indexing-and-embeddings.md))
+  maintenance (see [indexing and embeddings](architecture/indexing-and-embeddings.md))
 - `make db-backup` / `make db-restore` — database dump and restore
 - `make logs` — tail container logs
 - `make status` — check health
 
-`make help` lists the rest. Deployment detail lives in `DEPLOYMENT.md`, the
-user-facing documentation in `README.md`.
+`make help` lists the rest. Deployment detail lives in [DEPLOYMENT.md](../DEPLOYMENT.md), the
+user-facing documentation in [README.md](../README.md).
 
 ## Engineering workflow
 
@@ -110,7 +115,7 @@ it after any migration and after any deploy that ran one (`make db-check`, or
 `docker exec obsidian-mcp alembic check` directly). A dirty check means the
 database and the models disagree, which makes the next autogenerate emit noise
 and, worse, hides a real missing constraint in it — see
-[schema and migrations](docs/architecture/schema-and-migrations.md).
+[schema and migrations](architecture/schema-and-migrations.md).
 
 **Codex framing for this product.** The consumer here is an **agent**, not a
 person, and the vault is Max's single source of truth for every project. The
@@ -131,7 +136,7 @@ tasks §6).
 ## Key decisions
 
 The load-bearing rationale — the "this was a bug once, do not undo it"
-material — lives in [`docs/architecture/`](docs/architecture/), indexed at the
+material — lives in [`docs/architecture/`](architecture/), indexed at the
 bottom of this file. **Read the relevant note before changing that area, and
 update it in the same change.** What stays here is the short list:
 
@@ -140,7 +145,7 @@ update it in the same change.** What stays here is the short list:
 - Vault mounted read-write at /obsidian in container
 - Read responses are capped in characters (`MAX_READ_RESPONSE_CHARS`, default
   40,000) independently of the byte caps on disk I/O — see "Three kinds of size cap"
-  in [vault tools](docs/architecture/vault-tools.md). Tool output is model
+  in [vault tools](architecture/vault-tools.md). Tool output is model
   input; the server must bound it.
 - Two active users' vault roots may not overlap. `src/services/vault_overlap.py`
   compares each pair by inode identity `(st_dev, st_ino)` and by a
@@ -152,7 +157,7 @@ update it in the same change.** What stays here is the short list:
   A bind-mount *graft* is undetected **by decision** (L1/L2, owner-accepted
   2026-09-21, #262: never mount one tenant's directory inside another's root)
   and the consequence is cross-tenant read/overwrite/delete — see
-  [vault roots and tenancy](docs/architecture/vault-roots-and-tenancy.md).
+  [vault roots and tenancy](architecture/vault-roots-and-tenancy.md).
 - **`/mcp` rate control is in-process, and `--workers 1` is part of the
   contract.** Two per-principal token buckets in `_tracked` (general 120/min
   burst 30; write 60/min burst 15 on the eight vault-mutating tools *and*
@@ -161,7 +166,7 @@ update it in the same change.** What stays here is the short list:
   principal is `("api_key", id)` or `("oauth", grant_id)` — the **grant**, so a
   refresh does not mint a fresh allowance. State is in the worker's memory and
   deliberately not persisted; a second uvicorn worker multiplies every rate by
-  the worker count. See [rate limits](docs/architecture/rate-limits.md).
+  the worker count. See [rate limits](architecture/rate-limits.md).
 - **The buckets are the first gates; the daily quota stays the last pre-body
   gate.** Nothing durable is consumed by a call that does not run — a
   rate-refused call spends no `quota_counters` slot. Every refusal raised
@@ -189,7 +194,7 @@ update it in the same change.** What stays here is the short list:
   keys, counted under `FOR UPDATE` on the `users` row; admins exempt, nothing
   revoked. Refusal event `key_creation_throttled`, subject = the exact
   account identity, never the address. The rules live in
-  `src/services/api_keys.py` — see [rate limits](docs/architecture/rate-limits.md).
+  `src/services/api_keys.py` — see [rate limits](architecture/rate-limits.md).
 - **Concurrency admission has four modes — `off | shadow | queue | enforce` —
   and defaults to `shadow`** (#261, #188): observe, never wait or refuse.
   `queue` waits like `enforce` but admits with an `overrun` mark where enforce
@@ -203,7 +208,7 @@ update it in the same change.** What stays here is the short list:
   held through telemetry (early release lost audit rows). A concurrency
   refusal consumes no quota, but the rate tokens already spent stay spent.
   The pool budget leaves four shared connections of headroom, not a
-  reservation. See [rate limits](docs/architecture/rate-limits.md) before
+  reservation. See [rate limits](architecture/rate-limits.md) before
   changing settings.
 - **The `/mcp` body-memory budget is always on** (#322): no shadow mode, no
   off switch, every concurrency mode. Each authenticated POST (GET/DELETE
@@ -216,7 +221,7 @@ update it in the same change.** What stays here is the short list:
   fraction ≤ 0.5, budget ≤ the limit's safe allocation), and the **lifespan**
   — never `Settings`, which the alembic init container imports — refuses to
   start when one maximum write cannot fit (≈ 1.1 GiB minimum). See
-  [rate limits](docs/architecture/rate-limits.md).
+  [rate limits](architecture/rate-limits.md).
 - **`TRUSTED_PROXY_IPS` is the single control of forwarded-header trust**
   (#189). It is validated at boot, stored **canonicalised** (`192.168.0.10/24`
   → `192.168.0.0/24`, because uvicorn's middleware silently matches nothing on
@@ -242,7 +247,7 @@ update it in the same change.** What stays here is the short list:
   than `OAUTH_CLIENT_UNUSED_EXPIRY_DAYS` (30; `null` disables, `0` is refused)
   with no child rows, via `FOR UPDATE SKIP LOCKED` and a re-check *inside* the
   lock — a single `DELETE … WHERE NOT EXISTS` cascades away a just-issued code
-  under READ COMMITTED. See [oauth and grants](docs/architecture/oauth-and-grants.md).
+  under READ COMMITTED. See [oauth and grants](architecture/oauth-and-grants.md).
 - **OAuth grants expire absolutely, and a replayed code revokes its family**
   (#325, #326, migration 029). `oauth_tokens.grant_issued_at` is set at the
   code exchange and inherited verbatim by every rotation, like `grant_id`;
@@ -257,7 +262,7 @@ update it in the same change.** What stays here is the short list:
   full revalidation** (client, redirect URI, PKCE), with a response identical
   to an unknown code — and so does **every failed revalidation of a spent
   code** (reason only in the log). A live code keeps its specific refusals
-  and the pre-#325 check order (expiry first). See [oauth and grants](docs/architecture/oauth-and-grants.md).
+  and the pre-#325 check order (expiry first). See [oauth and grants](architecture/oauth-and-grants.md).
 - **Machine-facing paths refuse plaintext HTTP** (#196): a priority-200
   Traefik router on the `http` entrypoint, in `docker-compose.yml`'s labels,
   answers 403 via `ipAllowList` on `192.0.2.0/32` for `/mcp`, `/transfer`,
@@ -276,13 +281,13 @@ update it in the same change.** What stays here is the short list:
   processor on the four panel/auth/consent template instances — not a path, so
   transfer pages and `/docs` are untouched. `PANEL_CSP=report-only|off` is the
   rollback (recreate, no rebuild). htmx is deliberately absent: its `hx-*`
-  attributes are a nonce-bypass gadget. See [control panel](docs/architecture/control-panel.md).
+  attributes are a nonce-bypass gadget. See [control panel](architecture/control-panel.md).
 - **Tool-body outcomes are typed internally.** Only the terminal `BodyOutcome`
   (or `ReadNoteResult` private outcome) drives usage classification; never
   infer failure from prose or a note's forged `MCP-REFUSAL` text. Partial writes
   retain publication uncertainty and cannot claim `nothing_written`. Body
   refusals remain executed work; shadow pressure cannot replace their actual
-  outcome. See [usage attribution](docs/architecture/usage-attribution.md).
+  outcome. See [usage attribution](architecture/usage-attribution.md).
 - **Internal hops have one transport policy each** (#184, #185). Database TLS
   is `DATABASE_SSL_MODE` only (default `prefer`; a TLS key in `DATABASE_URL`
   or any `PGSSL*` variable is refused); strict modes are an explicit
@@ -291,8 +296,8 @@ update it in the same change.** What stays here is the short list:
   embedding URL must be `https` or loopback unless `EMBEDDING_ALLOW_PLAINTEXT`,
   and every embedding HTTP client comes from `embedding_http_client`
   (`trust_env=False`, no redirects). See
-  [schema and migrations](docs/architecture/schema-and-migrations.md) and
-  [indexing and embeddings](docs/architecture/indexing-and-embeddings.md).
+  [schema and migrations](architecture/schema-and-migrations.md) and
+  [indexing and embeddings](architecture/indexing-and-embeddings.md).
 - **The app is never the PostgreSQL superuser** (#324). The lifespan reads
   `rolsuper` for `current_user` after the transport assertion and exits
   unless `DATABASE_ALLOW_SUPERUSER=true` — every deployment, by owner
@@ -305,7 +310,7 @@ update it in the same change.** What stays here is the short list:
   new extension goes in the init scripts, never a migration. Pre-#324
   compose volumes convert by hand with `docker/upgrade-split-db-roles.sql`
   (nothing automatic). See
-  [schema and migrations](docs/architecture/schema-and-migrations.md).
+  [schema and migrations](architecture/schema-and-migrations.md).
 - **Bookkeeping writes commit asynchronously; credential writes never do**
   (#279). `SET LOCAL synchronous_commit = off` is issued in exactly three
   places — the `api_keys.last_used_at` UPDATE (itself skipped when the stamp
@@ -368,7 +373,7 @@ update it in the same change.** What stays here is the short list:
   (`src/services/empty_prune.py`) taken by the scope's next pass either way.
   The provenance discard is the stated exception. A wrong but non-empty
   mount is not detected (L1) — see
-  [indexing and embeddings](docs/architecture/indexing-and-embeddings.md).
+  [indexing and embeddings](architecture/indexing-and-embeddings.md).
 - Wikilink graph extracted from note bodies into `note_links`; resolved at index time with same-folder-first preference
 - `MCP_SANDBOX_MODE=true` is a registry-eval-only switch: lifespan skips `_check_embedding_dim` and the indexer, and `APIKeyMiddleware` bypasses auth on `/mcp/*`. Lets Glama's sandbox build the image and validate MCP introspection without external deps. Never enable in production — tools register but cannot run.
 
@@ -377,7 +382,7 @@ update it in the same change.** What stays here is the short list:
 25 default tools (plus opt-in `inspect_chatgpt_file` and `import_chatgpt_image`), all registered in `src/mcp_server/server.py` and all wrapped by
 `_tracked`, which resolves the caller's vault root *before* the tool body runs
 — that decorator is the whole enforcement of "this user has no vault"
-([vault roots and tenancy](docs/architecture/vault-roots-and-tenancy.md)).
+([vault roots and tenancy](architecture/vault-roots-and-tenancy.md)).
 
 **Search and read** — `keyword_search`, `semantic_search`, `read_note`,
 `list_notes`, `get_tags`, `get_recent`, `get_vault_guide`.
@@ -395,7 +400,7 @@ Link extraction lives in `src/services/links.py`. The extractor strips fenced/in
 `set_frontmatter`. Markdown only, all publishing through
 `vault._atomic_write_at` against a descriptor opened at validation. The
 destructive-write surface: read
-[vault tools](docs/architecture/vault-tools.md) first.
+[vault tools](architecture/vault-tools.md) first.
 
 **Raw files (non-markdown)** — `read_file`, `write_file`, `list_files`,
 `delete_file`. Pure byte transport, same traversal and dot-dir guards, no
@@ -404,13 +409,13 @@ indexing.
 **Transfer** — `request_upload`, `check_upload`, `request_download`,
 `import_from_url`, plus the public `/transfer/*` routes. A capability pins
 everything it may do at mint time; see
-[file transfer](docs/architecture/file-transfer.md).
+[file transfer](architecture/file-transfer.md).
 
 `CHATGPT_FILE_PROBE_ENABLED=true` registers a memory-only native ChatGPT file
 binding diagnostic. Its temporary URL/ID never belong in logs, vault files or
 durable capabilities. `CHATGPT_IMAGE_IMPORT_ENABLED=true` separately enables
 checksum-confirmed PNG/JPEG import to new paths only, using actual format rather
-than filename/MIME and the existing locked no-clobber publisher. See [file transfer](docs/architecture/file-transfer.md#native-chatgpt-file-diagnostic).
+than filename/MIME and the existing locked no-clobber publisher. See [file transfer](architecture/file-transfer.md#native-chatgpt-file-diagnostic).
 
 ## Architecture notes
 
@@ -420,17 +425,17 @@ summaries.
 
 | Note | Read it before you touch |
 | --- | --- |
-| [schema-and-migrations.md](docs/architecture/schema-and-migrations.md) | any alembic migration; `alembic check` is the cheap gate, not the whole gate |
-| [oauth-and-grants.md](docs/architecture/oauth-and-grants.md) | `src/oauth/`, the consent page, anything minting/rotating/revoking a token |
-| [vault-roots-and-tenancy.md](docs/architecture/vault-roots-and-tenancy.md) | `APIKeyMiddleware`, `_vault_root`, owner predicates, publication confirmation, the vault-root overlap guard (`src/services/vault_overlap.py`, the snapshot, the five pass entry points) |
-| [vault-tools.md](docs/architecture/vault-tools.md) | any note or file tool: frontmatter, symlinks, anchored writes, section addressing, size caps |
-| [file-transfer.md](docs/architecture/file-transfer.md) | `src/transfer/`, `src/services/vault_fs.py`, the publish gate, SSRF policy, the write-bucket charge at redemption |
-| [search.md](docs/architecture/search.md) | `semantic_search` / `keyword_search` / `find_related` and every `SET LOCAL` they issue |
-| [indexing-and-embeddings.md](docs/architecture/indexing-and-embeddings.md) | the indexer loop, the embed pass, tsvector writers, provider abstraction |
-| [security-event-logging.md](docs/architecture/security-event-logging.md) | `src/logging_setup.py`, `src/services/security_events.py`, and any call site that logs a refusal: the field allow-list, the event catalogue, the suppressor |
-| [rate-limits.md](docs/architecture/rate-limits.md) | `src/services/rate_limits.py`, `src/services/concurrency.py`, `src/services/pool_budget.py`, `src/services/concurrency_counters.py`, `src/services/concurrency_readiness.py`, `src/services/refusals.py`, the pool subclass in `src/database.py`, the failed-auth budget in `APIKeyMiddleware`, the gate order in `_tracked`, the worker count, the key-creation budget and active-key cap (`src/services/api_keys.py`), and every `MCP_RATE_LIMIT_*` / `MCP_AUTH_FAILURE_*` / `MCP_CONCURRENCY_*` / `KEY_CREATION_*` / `KEY_MAX_ACTIVE_PER_ACCOUNT` / `DEFAULT_DAILY_REQUEST_LIMIT` setting |
-| [usage-attribution.md](docs/architecture/usage-attribution.md) | `usage_logs`, `_log_usage`, actor columns |
-| [control-panel.md](docs/architecture/control-panel.md) | panel templates, flash messages, admin guards, the Danger zone |
+| [schema-and-migrations.md](architecture/schema-and-migrations.md) | any alembic migration; `alembic check` is the cheap gate, not the whole gate |
+| [oauth-and-grants.md](architecture/oauth-and-grants.md) | `src/oauth/`, the consent page, anything minting/rotating/revoking a token |
+| [vault-roots-and-tenancy.md](architecture/vault-roots-and-tenancy.md) | `APIKeyMiddleware`, `_vault_root`, owner predicates, publication confirmation, the vault-root overlap guard (`src/services/vault_overlap.py`, the snapshot, the five pass entry points) |
+| [vault-tools.md](architecture/vault-tools.md) | any note or file tool: frontmatter, symlinks, anchored writes, section addressing, size caps |
+| [file-transfer.md](architecture/file-transfer.md) | `src/transfer/`, `src/services/vault_fs.py`, the publish gate, SSRF policy, the write-bucket charge at redemption |
+| [search.md](architecture/search.md) | `semantic_search` / `keyword_search` / `find_related` and every `SET LOCAL` they issue |
+| [indexing-and-embeddings.md](architecture/indexing-and-embeddings.md) | the indexer loop, the embed pass, tsvector writers, provider abstraction |
+| [security-event-logging.md](architecture/security-event-logging.md) | `src/logging_setup.py`, `src/services/security_events.py`, and any call site that logs a refusal: the field allow-list, the event catalogue, the suppressor |
+| [rate-limits.md](architecture/rate-limits.md) | `src/services/rate_limits.py`, `src/services/concurrency.py`, `src/services/pool_budget.py`, `src/services/concurrency_counters.py`, `src/services/concurrency_readiness.py`, `src/services/refusals.py`, the pool subclass in `src/database.py`, the failed-auth budget in `APIKeyMiddleware`, the gate order in `_tracked`, the worker count, the key-creation budget and active-key cap (`src/services/api_keys.py`), and every `MCP_RATE_LIMIT_*` / `MCP_AUTH_FAILURE_*` / `MCP_CONCURRENCY_*` / `KEY_CREATION_*` / `KEY_MAX_ACTIVE_PER_ACCOUNT` / `DEFAULT_DAILY_REQUEST_LIMIT` setting |
+| [usage-attribution.md](architecture/usage-attribution.md) | `usage_logs`, `_log_usage`, actor columns |
+| [control-panel.md](architecture/control-panel.md) | panel templates, flash messages, admin guards, the Danger zone |
 
 Formal requirements live in `openspec/specs/`; the change history and its
 reasoning in `openspec/changes/archive/`.

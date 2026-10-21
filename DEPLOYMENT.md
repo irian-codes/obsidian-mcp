@@ -612,9 +612,13 @@ URL:  https://your-hostname/mcp
 Auth: Bearer omcp_...
 ```
 
-The first call any agent should make in a new session is
-`get_vault_guide()`. That's how it learns your folder structure and
-conventions before writing anything.
+Before relying on vault guidance, install the intended guide files and set
+`VAULT_GUIDE_CONFIG` as described in [guide configuration](README.md#the-self-describing-vault),
+then recreate the selected MCP service and refresh cached client tool metadata.
+An agent can load base instructions and discover topics with
+`get_vault_guide(client="claude-code")`, then request relevant catalog topics
+as needed. Missing configuration refuses guide calls; malformed configured
+maps refuse startup.
 
 ## Sizing and cost
 

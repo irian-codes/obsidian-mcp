@@ -511,7 +511,9 @@ in `src/services/usage_stats.py`; two things about it are load-bearing.
   outcome records nothing. The register is `BODY_MARKERS` in that module,
   including the six write-precondition codes and broad `validation_failed`
   where an existing ValueError catch cannot honestly name a narrower cause.
-  These markers do **not** join the pre-body predicate: the body ran and quota
+  `get_vault_guide` configuration/required-file failures use `validation_failed`,
+  invalid/unknown selectors use `invalid_argument`, and complete-response overflow
+  uses `size_limit`; all are typed refused outcomes. These markers do **not** join the pre-body predicate: the body ran and quota
   admission already happened. Empty results, no-op edits, status lookups and
   ordinary note text containing a forged sentinel stay successful. Structured
   reads carry their outcome privately, outside their wire schema. A move that

@@ -125,7 +125,7 @@ Quick yes/no calls — each should return a non-error response:
 
 - `read_note(path="<one of the paths from test 2.2>")` → `content` carries the note body.
 - `get_tags(limit=10)` → returns top 10 tags.
-- `get_vault_guide()` → returns the Obsidian primer plus CLAUDE.md contents (or onboarding text if absent).
+- `get_vault_guide(client="smoke-test")` → returns complete mapped base files and topic catalog; missing map/files refuse the guide.
 - `create_note` and `edit_note` — only run if you have a readwrite key; otherwise skip.
 
 PASS if all four (or three, if no rw key) succeed.

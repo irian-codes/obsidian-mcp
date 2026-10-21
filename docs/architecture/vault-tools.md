@@ -29,6 +29,49 @@ Protocol
 coverage lives in `tests/test_tool_annotations.py`; newly registered tools
 must be classified explicitly there too.
 
+## Configured vault guidance
+
+`get_vault_guide(client: str, topics: list[str] = [])` assembles files from the
+per-deployment `VAULT_GUIDE_CONFIG` map. `src/vault_guide_config.py` validates
+strict JSON/schema, safe lexical paths and exact case-sensitive selectors;
+`src/services/vault_guide.py` performs selection and fresh full-text reads.
+There is no bundled primer, implicit instruction filename, include expansion,
+index lookup, content cache or compatibility mode. Operators own guide text.
+
+Order is base files → every requested topic's common files → each requested
+topic's exact matching client additions; first-occurrence path deduplication
+also covers duplicate topics. A client addition is an AND selection, never a
+global client package. The catalog lists configured topics/client selectors;
+it does not load them. A valid unmatched client gets common files. Caller
+`client` is context only, never a principal or an authorization boundary.
+
+Missing configuration leaves startup available but guide calls return a typed
+`validation_failed` incomplete-guide refusal. Configured malformed JSON/maps
+fail Settings validation at startup (input values remain hidden). This avoids
+making unrelated server/migration imports require guide configuration while
+still refusing every unconfigured guide. Unknown/invalid selectors return
+`invalid_argument`; schema errors (including missing client) precede `_tracked`.
+
+Every file uses `vault.read_bytes(..., max_bytes=MAX_FILE_READ_BYTES)` inside
+the already-admitted selected vault: existing containment, visibility, symlink
+and tenant guards remain authoritative. Safe in-vault symlinks retain ordinary
+read semantics; escape/hidden targets refuse. Full strict UTF-8 text includes
+frontmatter and preserves line endings. Missing/unreadable/empty/unsafe/invalid
+UTF-8/over-byte-cap files return a typed `validation_failed` incomplete-guide
+refusal, omitting all previously assembled file content and OS error details.
+The complete response (catalog, labels and files) must fit
+`MAX_READ_RESPONSE_CHARS`; otherwise `size_limit` refuses the whole guide.
+There is no successful partial or truncated guide. These are post-body outcomes
+with the existing usage attribution. File reads are sequential, not a multi-file
+snapshot; concurrent edits can supply different instants, as with ordinary
+independent reads. Existing filesystem race limitations are unchanged.
+
+The new tool schema/configuration is a breaking adoption step: install files,
+configure the map, recreate only the selected MCP service and refresh client
+metadata before relying on the guide. Canonical reusable guidance/templates and
+selected production adoption are separate integration changes. Historical
+primer text remains recoverable in Git; it is no longer shipped automatically.
+
 ## Unknown arguments are refused (#295)
 
 FastMCP 1.29 builds each tool's argument model on `ArgModelBase`, which sets no
@@ -481,7 +524,7 @@ exactly as an oversized file does.
 There are **byte** caps, a **character** cap, a **transport** cap and a process-wide **body budget**, and they protect different things:
 
 - `MAX_FILE_READ_BYTES` / `MAX_FILE_WRITE_BYTES` bound what the **server** reads into or writes out of memory. They refuse the operation.
-- `MAX_READ_RESPONSE_CHARS` (default 40,000 ≈ 10K tokens) bounds what `read_note` / `read_file` **return to the caller**, whose context the result consumes. It truncates rather than refusing.
+- `MAX_READ_RESPONSE_CHARS` (default 40,000 ≈ 10K tokens) bounds what `read_note` / `read_file` **return to the caller**, whose context the result consumes. Those tools truncate. `get_vault_guide` uses the same cap for its entire assembled response and refuses overflow, because truncated instructions are incomplete guidance.
 - The MCP streamable-HTTP **request body limit** bounds what the transport accepts at all, before any tool runs. It is derived, not configured: `max(2 × MAX_FILE_WRITE_BYTES, 6 × MAX_NOTE_BYTES) + 1 MiB` (61 MiB with the defaults), passed to `FastMCP(max_request_body_size=)` from `Settings.mcp_max_request_body_bytes`. The SDK's own default is 4 MiB, which would silently reject writes far below our documented 25 MB cap. The formula guarantees — for a *canonical* envelope, i.e. JSON-RPC framing plus non-content arguments under 1 MiB — that a base64 `write_file` at the cap (base64 is `4·⌈n/3⌉ ≤ 2n + 2`) and any note write up to `MAX_NOTE_BYTES` (JSON escaping expands a byte at most 6×) always reach the tool, which then decides. Unsupported shapes are bounded by the transport with a bare HTTP 413 and no tool error: text-mode `write_file` whose escaping exceeds the limit (send base64 — always safe), an envelope over 1 MiB, and arguments that are large but discarded.
 - The **body-memory budget** (#322) is the process-wide counterpart of that per-request limit: it bounds the *sum* of request bodies in flight across all `/mcp` requests, before the app reads a byte. Each authenticated POST reserves its declared `Content-Length` (the full per-request limit when unknown) against a budget derived from the container's memory (cgroup limit × 0.5 ÷ 8: 128 MiB of raw body on 2 GiB, one maximum write plus everything else), waits up to 15 s if it does not fit, and is otherwise answered with a transport 429 `code: body_memory`. It does not change the per-request limit, and startup refuses a container too small to admit one maximum body. See [rate limits](rate-limits.md).
 

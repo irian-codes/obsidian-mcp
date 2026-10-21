@@ -1,62 +1,112 @@
 # vault-guide Specification
 
 ## Purpose
-TBD - created by archiving change vault-guide-with-primer. Update Purpose after archive.
+Deliver complete, freshly read vault instructions from an explicit deployment
+file map, with caller/topic selection and fail-closed completeness.
+
 ## Requirements
 ### Requirement: Tool name and registration
 
-The MCP server SHALL expose a tool named `get_vault_guide` that returns onboarding instructions for an agent operating against the Obsidian vault. The tool SHALL accept no arguments and SHALL return a single string.
+The MCP server SHALL expose `get_vault_guide(client: str, topics: list[str] = [])`
+returning a single string. `client` SHALL be required; omitted topics SHALL
+select base guidance. The server SHALL NOT expose `get_vault_context`.
+Tool metadata SHALL describe required caller context, topic discovery and
+selection; it SHALL NOT advertise an implicit primer or instruction filename.
 
-The MCP server SHALL NOT expose a tool named `get_vault_context`. The previous name is removed by this change.
+#### Scenario: Required client and discoverable topics
+- **WHEN** a client lists tools
+- **THEN** `get_vault_guide` SHALL require `client` and default `topics` to `[]`
+- **AND** its description SHALL explain the generated topic catalog
+- **WHEN** a caller omits `client` or supplies an invalid declared type
+- **THEN** SDK argument validation SHALL refuse the call before its body runs
 
-#### Scenario: Tool is registered under the new name
+### Requirement: Strict deployment file map
 
-- **WHEN** an MCP client lists available tools on the server
-- **THEN** the listing SHALL contain `get_vault_guide`
-- **AND** the listing SHALL NOT contain `get_vault_context`
+`VAULT_GUIDE_CONFIG` SHALL define `base.files`, optional `topics.<name>.files`
+and optional `topics.<name>.clients.<client>.files`. Base files SHALL be
+nonempty. File lists SHALL contain strict strings; unknown fields, duplicate
+JSON keys, wrong types and unsafe paths SHALL be rejected before configured
+maps are adopted. Topic/client names SHALL start with an ASCII letter/digit
+and contain only ASCII letters, digits, underscores and hyphens. Paths SHALL
+be canonical printable visible vault-relative POSIX paths of at most 1,024 characters,
+without absolute/backslash/empty/dot/hidden/control components or invalid UTF-8.
 
-#### Scenario: Tool accepts no arguments
+Missing configuration SHALL permit startup but every guide call SHALL return
+an explicit incomplete-guide refusal. Configured malformed maps SHALL fail
+Settings validation at startup, without echoing their input values. The server
+SHALL NOT silently substitute any map, instruction file or primer.
 
-- **WHEN** an MCP client invokes `get_vault_guide` with an empty arguments object
-- **THEN** the tool SHALL return successfully without raising an argument-validation error
+#### Scenario: Bad map and missing map fail closed
+- **WHEN** a map has malformed/duplicate-key JSON, unsupported fields, wrong
+  types, empty base or unsafe paths
+- **THEN** Settings validation SHALL fail
+- **WHEN** the setting is omitted
+- **THEN** a guide call SHALL return an incomplete-guide `validation_failed`
+  body refusal with no file content
 
-### Requirement: Response includes a hardcoded Obsidian primer
+### Requirement: Topic AND client file selection
 
-The tool SHALL include a static Obsidian primer section in every response. The primer SHALL cover, at minimum: wikilinks (`[[Note Name]]` and `[[Note Name|alias]]`), embeds (`![[Note]]`), block references (`[[Note#^block-id]]`), heading references (`[[Note#Heading]]`), backlinks, tags including nested tags (`#tag/nested`), YAML frontmatter conventions, and a note that Dataview/Templater syntax appearing inside notes SHOULD be treated as literal text rather than executed.
+Every successful call SHALL include base files, then common files for every
+requested topic in request order, then matching client additions for those
+requested topics in request order. Paths and repeated topics SHALL be
+deduplicated preserving first occurrence. Client additions SHALL require BOTH
+the enclosing topic and exact case-sensitive client match. A valid unmatched
+client SHALL receive common files only. Unknown topics and invalid selector
+values SHALL return explicit `invalid_argument` body refusals. The caller's
+client value SHALL NOT act as authentication or authorization.
 
-The primer content SHALL be loaded from a source that ships with the server (a Markdown file in the repository or a Python constant), not from the database or from the vault filesystem.
+#### Scenario: AND match and negative controls
+- **WHEN** `chatgpt-chat` requests both `editing` and `attachments`
+- **THEN** base, common topic files and matching attachment additions SHALL appear
+- **WHEN** that client requests only editing or bootstrap, or another valid
+  client requests attachments
+- **THEN** the Chat attachment addition SHALL be absent
 
-#### Scenario: Primer is present in response
+#### Scenario: Stable deduplication and unknown topic
+- **WHEN** files recur across base, requested topics and matching additions
+- **THEN** each mapped path SHALL appear once at its earliest selected position
+- **WHEN** any requested topic is unknown
+- **THEN** the whole call SHALL refuse without returning base or other files
 
-- **WHEN** the tool is invoked
-- **THEN** the response SHALL contain a section header that introduces the Obsidian primer
-- **AND** the response SHALL contain at least one example of wikilink syntax (e.g., `[[Note Name]]`)
-- **AND** the response SHALL contain at least one example of embed syntax (e.g., `![[Note]]`)
+### Requirement: Fresh complete selected-vault files only
 
-#### Scenario: Primer is the same regardless of vault state
+All instruction body content SHALL come from freshly read selected vault files.
+The server MAY generate headings, source labels, a map-derived topic catalog
+and diagnostics. It SHALL NOT insert bundled primer content, use an implicit
+instruction filename, follow includes/links, use index content or cache file
+text. Each selected file SHALL appear in full with its vault-relative source
+label, including frontmatter and original decoded line endings.
 
-- **WHEN** the tool is invoked against a vault with no `CLAUDE.md`
-- **AND** the tool is invoked against a vault containing a `CLAUDE.md`
-- **THEN** the primer section of both responses SHALL be byte-identical
+The existing authenticated selected-vault filesystem service SHALL enforce
+containment, visibility, symlink and tenant guards. Safe in-vault symlinks
+SHALL retain ordinary read behavior. Missing, unreadable, unsafe, empty,
+invalid UTF-8 or over-byte-cap required files SHALL produce an explicit
+incomplete-guide `validation_failed` body refusal containing no partial file
+content. Each read SHALL obey `MAX_FILE_READ_BYTES`; the entire response,
+including catalog and labels, SHALL obey `MAX_READ_RESPONSE_CHARS`. Aggregate
+overflow SHALL return `size_limit`, never success with truncated instructions.
+No compatibility mode or `VAULT_GUIDE_INCLUDE_PRIMER` option SHALL exist.
 
-### Requirement: Response includes vault-specific guide from `CLAUDE.md`
+#### Scenario: Fresh full text and no implicit source
+- **WHEN** mapped file text changes between calls
+- **THEN** the next call SHALL return changed full text including frontmatter
+- **AND** an unmapped `CLAUDE.md` or file linked inside guidance SHALL remain absent
 
-When `CLAUDE.md` exists at the vault root, the tool SHALL include the file's contents as a vault-specific section, concatenated after the primer with a clear section header separating the two.
+#### Scenario: Required-file and aggregate failures return no partial guide
+- **WHEN** any selected file is missing, unreadable, empty, unsafe, invalid UTF-8
+  or larger than the existing byte cap
+- **THEN** the whole response SHALL be an explicit incomplete-guide refusal
+- **WHEN** complete assembled text, source labels and catalog exceed the
+  existing response character cap
+- **THEN** the whole response SHALL refuse with `size_limit`
+- **AND** neither refusal SHALL return already-read instruction text
 
-When `CLAUDE.md` does not exist at the vault root, the tool SHALL include a short onboarding message in place of the vault-specific section that explains how to create a `CLAUDE.md` file and what to put in it (folder structure, naming conventions, tag taxonomy). The response SHALL NOT raise an error in this case.
-
-#### Scenario: `CLAUDE.md` is present
-
-- **WHEN** the tool is invoked against a vault where `CLAUDE.md` exists at the root
-- **THEN** the response SHALL contain the contents of `CLAUDE.md` verbatim
-- **AND** the `CLAUDE.md` contents SHALL appear after the primer section, separated by a section header
-
-#### Scenario: `CLAUDE.md` is absent
-
-- **WHEN** the tool is invoked against a vault where `CLAUDE.md` does not exist at the root
-- **THEN** the response SHALL still return successfully (no error)
-- **AND** the response SHALL include text instructing the user how to create a `CLAUDE.md` file
-- **AND** the response SHALL include the primer section as usual
+#### Scenario: Authenticated A/B isolation at the tool boundary
+- **WHEN** two authenticated selections with distinct synthetic vault roots
+  invoke the actual MCP tool using identical relative maps
+- **THEN** each SHALL receive only its selected vault's file text
+- **AND** modifying one selected root SHALL be visible on its next call
+- **AND** traversal, symlink escape and hidden targets SHALL not expose content
 
 ### Requirement: Other tools reference the guide neutrally
 
@@ -81,19 +131,4 @@ The usage-logging system SHALL record invocations of `get_vault_guide` with `too
 
 - **WHEN** the change is deployed
 - **THEN** rows previously written with `tool='get_vault_context'` SHALL remain in `usage_logs` with their original tool name unchanged
-
-### Requirement: Guide references the file-access tools
-
-The guide returned by `get_vault_guide` SHALL reference the raw file-access tools (`read_file`, `write_file`, `list_files`, `delete_file`) so that an agent discovers it can read, write, browse, and delete non-markdown files (PDFs, images, skill assets) in the vault, and SHALL describe the file-transfer flow for clients that cannot supply bytes: `request_upload` → hand the human the link → `check_upload`, `request_download` for handing files out, and `import_from_url` for links — with `![[path]]` via `edit_note` as the way to embed a stored file in a note. The reference SHALL use neutral framing consistent with how other peer tools are described.
-
-#### Scenario: Guide mentions the file tools
-
-- **WHEN** `get_vault_guide` is invoked
-- **THEN** the response SHALL mention the `read_file`, `write_file`, `list_files`, and `delete_file` tools
-- **AND** the response SHALL indicate they operate on arbitrary (including non-markdown) files
-
-#### Scenario: Guide explains transfer
-
-- **WHEN** `get_vault_guide` is invoked
-- **THEN** the response SHALL mention `request_upload`, `check_upload`, `request_download`, and `import_from_url` and the upload-link flow in one short paragraph
 

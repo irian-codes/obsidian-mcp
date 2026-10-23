@@ -1095,6 +1095,7 @@ to multi-user later resumes where you left off without re-bootstrapping
 | `DATABASE_SSL_CERT_FILE` | — | Client certificate (PEM). Strict modes (`require`, `verify-ca`, `verify-full`) only; set together with `DATABASE_SSL_KEY_FILE` or not at all. |
 | `DATABASE_SSL_KEY_FILE` | — | Client private key for `DATABASE_SSL_CERT_FILE`. Both or neither. |
 | `VAULT_PATH` | `/obsidian` | In-container vault mount |
+| `MCP_SERVER_CONTEXT` | `Private Obsidian notes and attachments in the user-authorized vault.` | Deployment context sent in MCP initialization instructions. Leading/trailing whitespace is trimmed; omitted or whitespace-only uses the neutral default. Custom values must be one plain-text paragraph of at most 2048 printable Unicode characters, without internal controls, line separators or nonprintable spaces. Keep private overrides outside Git; recreate the selected server and reconnect/refresh clients after changes. Shared operating instructions ship in `src/mcp_server/operating_instructions.md`; configured guide files supply vault conventions. |
 | `SECRET_KEY` | — | itsdangerous signer key |
 | `INDEX_INTERVAL_SECONDS` | `300` | Periodic reindex cadence |
 | `INDEXER_DEGRADED_AFTER_FAILURES` | `3` | Consecutive failures of any indexer counter (a scope's index passes, its embed passes, its incomplete re-derives, or the tick's own user enumeration) at which `/health` reports `degraded` and one CRITICAL "manual intervention required" line is logged. |

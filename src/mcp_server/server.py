@@ -1,9 +1,11 @@
+from pathlib import Path
+from typing import Annotated
 from urllib.parse import urlparse
 
 from mcp.server.fastmcp import FastMCP
 from mcp.server.transport_security import TransportSecuritySettings
 from mcp.types import ToolAnnotations
-from pydantic import ConfigDict, ValidationError
+from pydantic import ConfigDict, Field, ValidationError
 
 from src.services.chatgpt_file_probe import ChatGPTFile
 
@@ -96,6 +98,11 @@ def _origin_patterns(origins) -> list[str]:
 
 mcp = FastMCP(
     "obsidian-vault",
+    instructions=(
+        settings.mcp_server_context
+        + "\n\n"
+        + Path(__file__).with_name("operating_instructions.md").read_text(encoding="utf-8").strip()
+    ),
     stateless_http=True,
     streamable_http_path="/",
     # Derived from the write caps rather than the SDK's 4 MiB default, which
@@ -377,10 +384,29 @@ async def semantic_search(
     )
 )
 async def create_note(
-    path: str, content: str, expected_hash: str | None = None
+    path: Annotated[
+        str,
+        Field(description=(
+            "Vault-relative new note path; .md is added if missing. Existing destinations are "
+            "refused."
+        )),
+    ],
+    content: Annotated[
+        str,
+        Field(description=(
+            "Complete Markdown for the new note, including any intended YAML frontmatter."
+        )),
+    ],
+    expected_hash: Annotated[
+        str | None,
+        Field(description=(
+            "Omit for creation: a supplied canonical whole-file hash is refused as "
+            "no_incumbent; malformed hashes refuse first."
+        )),
+    ] = None,
 ) -> str:
-    """Create a new markdown note in the Obsidian vault. Requires write permission — a `readwrite` API key, or an OAuth token
-    carrying the `readwrite` scope.
+    """Create a new Markdown note without replacing an existing file. Requires write permission — a
+    `readwrite` API key, or an OAuth token carrying the `readwrite` scope.
 
     See `get_vault_guide` for Obsidian syntax and any vault-specific conventions
     (naming, folder placement, frontmatter, tags).
@@ -430,19 +456,77 @@ async def create_note(
     )
 )
 async def edit_note(
-    path: str,
-    content: str,
-    append: bool = False,
-    operation: str | None = None,
-    find: str | None = None,
-    section: str | None = None,
-    replace_all: bool = False,
-    dry_run: bool = False,
-    replace_frontmatter: bool = False,
-    expected_hash: str | None = None,
+    path: Annotated[
+        str,
+        Field(description="Vault-relative existing note path."),
+    ],
+    content: Annotated[
+        str,
+        Field(description=(
+            "Body to replace, exact-text replacement, text to append, or section body. "
+            "Replacement can remove existing content; section mode preserves its heading."
+        )),
+    ],
+    append: Annotated[
+        bool,
+        Field(description=(
+            "Append content after a newline. Mutually exclusive with find and section; this "
+            "tool remains potentially destructive across its supported modes."
+        )),
+    ] = False,
+    operation: Annotated[
+        str | None,
+        Field(description=(
+            "Legacy mode selector: append or replace. See mode compatibility rules in the "
+            "tool description."
+        )),
+    ] = None,
+    find: Annotated[
+        str | None,
+        Field(description=(
+            "Exact raw-file text to replace; may include frontmatter. Must match once unless "
+            "replace_all is true. Mutually exclusive with append and section."
+        )),
+    ] = None,
+    section: Annotated[
+        str | None,
+        Field(description=(
+            "Replace the entire body under an ATX heading, preserving the heading. Use "
+            "Parent/Child or a 1-based #N ordinal; section refusals and nested-heading "
+            "safeguards apply."
+        )),
+    ] = None,
+    replace_all: Annotated[
+        bool,
+        Field(description=(
+            "With find, replace every exact match instead of requiring one unique match."
+        )),
+    ] = False,
+    dry_run: Annotated[
+        bool,
+        Field(description=(
+            "Return a unified diff without publishing a write; validation and hash "
+            "preconditions still apply."
+        )),
+    ] = False,
+    replace_frontmatter: Annotated[
+        bool,
+        Field(description=(
+            "Full-replace mode only: replace the entire file including YAML frontmatter. "
+            "False preserves an existing valid block byte-for-byte."
+        )),
+    ] = False,
+    expected_hash: Annotated[
+        str | None,
+        Field(description=(
+            "Optional canonical whole-file content_hash (sha256:<64 lowercase hex>), "
+            "including for sections and dry_run. Refuse a stale base before mode dispatch."
+        )),
+    ] = None,
 ) -> str:
-    """Edit an existing note in the Obsidian vault. Requires write permission — a `readwrite` API key, or an OAuth token
-    carrying the `readwrite` scope.
+    """Edit a note by append, exact-text, section-body or full-body replacement. Replacements can
+    remove content; valid frontmatter is preserved by default. Requires write permission — a
+    `readwrite` API key, or an OAuth token carrying the `readwrite` scope.
 
     See `get_vault_guide` for Obsidian syntax and any vault-specific conventions
     (naming, folder placement, frontmatter, tags).
@@ -775,13 +859,35 @@ async def find_orphans(folder: str | None = None, limit: int = 50) -> str:
     )
 )
 async def move_note(
-    from_path: str,
-    to_path: str,
-    rewrite_links: bool = False,
-    expected_hash: str | None = None,
+    from_path: Annotated[
+        str,
+        Field(description="Vault-relative existing note path to move or rename."),
+    ],
+    to_path: Annotated[
+        str,
+        Field(description=(
+            "Vault-relative new destination; must not exist. Missing parent directories are "
+            "created."
+        )),
+    ],
+    rewrite_links: Annotated[
+        bool,
+        Field(description=(
+            "Rewrite supported incoming links and the moved note’s own links. Modifies other "
+            "notes; preflight can refuse and later failures can leave partial changes."
+        )),
+    ] = False,
+    expected_hash: Annotated[
+        str | None,
+        Field(description=(
+            "Optional canonical whole-file content_hash of from_path. Binds only the moved "
+            "note, not backlink sources; this is not an atomic compare-and-move."
+        )),
+    ] = None,
 ) -> str:
-    """Move or rename a note inside the vault. Requires write permission — a `readwrite` API key, or an OAuth token
-    carrying the `readwrite` scope.
+    """Move or rename a note; optionally rewrite supported backlinks. Link rewrites can leave partial
+    changes after a successful move. Requires write permission — a `readwrite` API key, or an
+    OAuth token carrying the `readwrite` scope.
 
     Updates `notes_metadata.file_path` for the moved note and `note_links.target_path`
     rows whose stored target matched the old path. Backlinks via `target_note_id`
@@ -878,10 +984,27 @@ async def move_note(
     )
 )
 async def delete_note(
-    path: str, permanent: bool = False, expected_hash: str | None = None
+    path: Annotated[
+        str,
+        Field(description="Vault-relative Markdown note path to delete."),
+    ],
+    permanent: Annotated[
+        bool,
+        Field(description=(
+            "False moves to non-clobbering vault trash; True unlinks without a server "
+            "recovery path."
+        )),
+    ] = False,
+    expected_hash: Annotated[
+        str | None,
+        Field(description=(
+            "Optional canonical whole-file content_hash from your read. Checked before either "
+            "deletion mode; later concurrent edits can still be deleted."
+        )),
+    ] = None,
 ) -> str:
-    """Delete a note from the vault. Requires write permission — a `readwrite` API key, or an OAuth token
-    carrying the `readwrite` scope.
+    """Delete a Markdown note to vault trash by default, or permanently when requested. Requires write
+    permission — a `readwrite` API key, or an OAuth token carrying the `readwrite` scope.
 
     By default this is a soft-delete: the file is moved to
     `.trash/<YYYYMMDD-HHMMSS>-<basename>-<8 hex>` inside the vault root, by a
@@ -942,13 +1065,35 @@ async def delete_note(
     )
 )
 async def set_frontmatter(
-    path: str,
-    updates: dict | None = None,
-    remove: list[str] | None = None,
-    expected_hash: str | None = None,
+    path: Annotated[
+        str,
+        Field(description="Vault-relative existing note path; its body remains byte-identical."),
+    ],
+    updates: Annotated[
+        dict | None,
+        Field(description=(
+            "YAML keys and values to merge, overwriting matching keys. Omit or use an empty "
+            "mapping to skip; effective changes can reformat YAML and discard comments."
+        )),
+    ] = None,
+    remove: Annotated[
+        list[str] | None,
+        Field(description=(
+            "YAML keys to remove after updates; absent keys are ignored. Removing the last "
+            "key removes the frontmatter block."
+        )),
+    ] = None,
+    expected_hash: Annotated[
+        str | None,
+        Field(description=(
+            "Optional canonical whole-file content_hash from your read. Stale bases refuse "
+            "before malformed-frontmatter and no-op checks."
+        )),
+    ] = None,
 ) -> str:
-    """Mutate a note's YAML frontmatter without touching its body. Requires write permission — a `readwrite` API key, or an OAuth token
-    carrying the `readwrite` scope.
+    """Update YAML frontmatter while leaving the note body unchanged. YAML formatting and comments can
+    change. Requires write permission — a `readwrite` API key, or an OAuth token carrying the
+    `readwrite` scope.
 
     Parses the existing frontmatter, merges in `updates` (overwriting matching
     keys, adding any new ones), then drops keys listed in `remove`. The note
@@ -1084,15 +1229,46 @@ async def read_file(
     )
 )
 async def write_file(
-    path: str,
-    content: str,
-    encoding: str = "base64",
-    overwrite: bool = False,
-    expected_hash: str | None = None,
+    path: Annotated[
+        str,
+        Field(description=(
+            "Vault-relative destination file path; hidden components and traversal are "
+            "refused."
+        )),
+    ],
+    content: Annotated[
+        str,
+        Field(description=(
+            "File bytes encoded as base64 by default, or UTF-8 text with encoding=text. "
+            "Decoded content must fit the configured write cap."
+        )),
+    ],
+    encoding: Annotated[
+        str,
+        Field(description=(
+            "base64 (default) or text. Base64 avoids text JSON-escaping inflation at the "
+            "transport limit."
+        )),
+    ] = "base64",
+    overwrite: Annotated[
+        bool,
+        Field(description=(
+            "False refuses an existing destination; True permits atomic replacement of the "
+            "whole file."
+        )),
+    ] = False,
+    expected_hash: Annotated[
+        str | None,
+        Field(description=(
+            "Optional canonical whole-file raw-byte content_hash for overwrite=True. "
+            "No-clobber or a missing incumbent refuses a hash; stale or concurrent changes "
+            "refuse publication."
+        )),
+    ] = None,
 ) -> str:
-    """Write a file into the vault — including non-markdown (e.g. save a
-    generated PDF or image). Requires write permission — a `readwrite` API key, or an OAuth token
-    carrying the `readwrite` scope.
+    """Write file bytes to the vault; existing files are refused unless overwrite=True. Replacement
+    overwrites the whole file. Supports non-Markdown files such as PDFs and images. Requires
+    write permission — a `readwrite` API key, or an OAuth token carrying the `readwrite` scope.
     Peer to `create_note`/`edit_note`, which stay markdown-only.
 
     `content` carries the bytes: with `encoding="base64"` (default) it is
@@ -1356,10 +1532,30 @@ async def import_from_url(url: str, path: str, overwrite: bool = False) -> str:
     )
 )
 async def delete_file(
-    path: str, permanent: bool = False, expected_hash: str | None = None
+    path: Annotated[
+        str,
+        Field(description=(
+            "Vault-relative non-Markdown file path; Markdown, directories and symlinks are "
+            "refused."
+        )),
+    ],
+    permanent: Annotated[
+        bool,
+        Field(description=(
+            "False moves to non-clobbering vault trash; True unlinks without a server "
+            "recovery path."
+        )),
+    ] = False,
+    expected_hash: Annotated[
+        str | None,
+        Field(description=(
+            "Optional canonical whole-file raw-byte content_hash for either mode. Checked "
+            "before deletion; this is not an atomic compare-and-delete."
+        )),
+    ] = None,
 ) -> str:
-    """Delete a non-markdown file from the vault. Requires write permission — a `readwrite` API key, or an OAuth token
-    carrying the `readwrite` scope.
+    """Delete a non-Markdown file to vault trash by default, or permanently when requested. Requires
+    write permission — a `readwrite` API key, or an OAuth token carrying the `readwrite` scope.
     Peer to `delete_note`, which stays markdown-only.
 
     By default this is a soft delete: the file moves to

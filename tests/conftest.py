@@ -34,6 +34,7 @@ SETTINGS_ENV_KEYS = (
     # Ollama request batching (#281).
     "OLLAMA_EMBED_BATCH_SIZE",
     "VAULT_PATH",
+    "MCP_SERVER_CONTEXT",
     "VAULT_GUIDE_CONFIG",
     "SECRET_KEY",
     "INDEX_INTERVAL_SECONDS",

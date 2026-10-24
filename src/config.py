@@ -19,6 +19,29 @@ from src.services.transport_security import normalise_db_ssl_mode
 from src.vault_guide_config import VaultGuideConfig, parse_guide_config
 
 
+DEFAULT_MCP_SERVER_CONTEXT = (
+    "Private Obsidian notes and attachments in the user-authorized vault."
+)
+MAX_MCP_SERVER_CONTEXT_CHARS = 2048
+
+
+def _validate_mcp_server_context(value: Any) -> Any:
+    # Empty deployment placeholders retain useful, neutral metadata. Check
+    # this before controls/length so whitespace-only values also fall back.
+    if not isinstance(value, str):
+        return value  # Let the field's normal string validation refuse types.
+    value = value.strip()
+    if not value:
+        return DEFAULT_MCP_SERVER_CONTEXT
+    if len(value) > MAX_MCP_SERVER_CONTEXT_CHARS or not value.isprintable():
+        # Never interpolate private deployment context into startup errors.
+        raise ValueError(
+            "MCP_SERVER_CONTEXT must be one plain-text paragraph of at most "
+            "2048 printable Unicode characters"
+        )
+    return value
+
+
 # ── One representation for "off" ────────────────────────────────────────────
 #
 # `.env` has no JSON `null`, so every nullable limiter setting needs a textual
@@ -367,6 +390,9 @@ class Settings(BaseSettings):
     # reproduces the pre-batching request shape, one chunk per request.
     ollama_embed_batch_size: int = Field(16, ge=1, le=256)
     vault_path: str = "/obsidian"
+    mcp_server_context: Annotated[
+        str, BeforeValidator(_validate_mcp_server_context)
+    ] = Field(default=DEFAULT_MCP_SERVER_CONTEXT, repr=False)
     # Missing maps refuse guide calls; configured maps validate at startup.
     vault_guide_config: Annotated[
         VaultGuideConfig | None, NoDecode, BeforeValidator(parse_guide_config)

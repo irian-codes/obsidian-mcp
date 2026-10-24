@@ -2,6 +2,36 @@
 
 > Deep rationale extracted from `AGENTS.md`. Read before touching any note or file tool — this is the destructive-write surface.
 
+## MCP initialization and parameter guidance
+
+`MCP_SERVER_CONTEXT` supplies a deployment's plain-text context paragraph.
+Leading/trailing whitespace is trimmed first. Omitted, empty and whitespace-only
+values use the neutral default, "Private
+Obsidian notes and attachments in the user-authorized vault." Nonblank values
+are limited to 2048 Unicode characters and must satisfy Python `str.isprintable()`;
+internal controls, line/paragraph separators and nonprintable spaces refuse startup.
+Validation messages never interpolate context and Settings hides input in
+startup error strings; the setting is excluded from Settings repr. Private
+overrides belong in deployment configuration outside Git.
+
+`src/mcp_server/server.py` combines that context with the shipped
+`src/mcp_server/operating_instructions.md` and passes the result as
+`FastMCP(instructions=...)`, so clients receive it in the real `initialize`
+response. The existing Dockerfile's `COPY src/ src/` includes the text. Missing
+instruction text fails startup rather than silently serving incomplete
+guidance. Context changes require server recreation and client metadata refresh.
+The shared instructions distinguish ordinary content (data) from deliberately
+configured guide files (operating guidance), reinforce write safeguards,
+and acknowledge database/index, embedding-provider and Sync effects without
+implying that note editing publicly publishes content.
+
+Core note/file write registrations use `Annotated[..., Field(description=...)]`
+so parameter guidance appears in actual `tools/list` input schemas, alongside
+the complete tool descriptions. Defaults, argument validation and tool effects
+are unchanged; edit remains destructive even when a particular call appends or
+uses dry-run. Protocol coverage lives in `tests/test_mcp_server_metadata.py`
+and `tests/test_tool_annotations.py`.
+
 ## MCP tool annotations
 
 Every registration in `src/mcp_server/server.py` publishes explicit v1 SDK

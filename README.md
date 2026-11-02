@@ -311,6 +311,22 @@ component starting with `.` (dot-directories and dot-files)
 (`.obsidian`, `.git`, `.trash`, …), matching the indexer's visibility
 rule.
 
+### Empty folder cleanup
+
+`delete_empty_folder_tree(path)` removes a selected folder and its descendants
+only when the whole tree contains directories and no files. It requires write
+permission, refuses hidden entries and symlinks, and checks the entire tree
+before removing anything. At most 1,000 directories can be selected per call.
+The vault root, ancestors and siblings are preserved.
+
+Empty directories are permanently removed without trash entries. Every removal
+uses the filesystem's empty-directory operation, so a file arriving during
+cleanup blocks removal rather than being deleted. The tree operation is not
+atomic: a later failure reports how many directories were already removed and
+where cleanup stopped. Inspect the tree before retrying; an already absent
+selection is a successful no-op. No file hash or permanent-deletion flag is
+needed. Existing note/file deletion and trash behavior remain unchanged.
+
 ### Guarding edits against stale reads
 
 Pass a read's `content_hash` as `expected_hash` when editing, updating
@@ -1143,7 +1159,7 @@ to multi-user later resumes where you left off without re-bootstrapping
 | `MCP_AUTH_FAILURE_TABLE_SIZE` | `4096` | Counter slots in the fixed-size, per-process-salted address table. Memory is O(size); collisions only make the control stricter. |
 | `MCP_RATE_LIMIT_PER_MINUTE` | `120` | Sustained tool calls per minute per principal (an API key, or an OAuth *grant*). Null — with the burst — disables the general bucket. |
 | `MCP_RATE_LIMIT_BURST` | `30` | Capacity of the general bucket. Must be set together with its rate or nulled together with it. |
-| `MCP_WRITE_RATE_LIMIT_PER_MINUTE` | `60` | Sustained vault-mutating calls per minute per principal — the eight default write tools and opt-in `import_chatgpt_image`, plus `PUT /transfer/upload` charged to the principal that minted the capability. |
+| `MCP_WRITE_RATE_LIMIT_PER_MINUTE` | `60` | Sustained vault-mutating calls per minute per principal — the nine default write tools and opt-in `import_chatgpt_image`, plus `PUT /transfer/upload` charged to the principal that minted the capability. |
 | `MCP_WRITE_RATE_LIMIT_BURST` | `15` | Capacity of the write bucket. |
 | `MCP_LIMITER_MAX_TRACKED_PRINCIPALS` | `10000` | Principals holding their own limiter entry before further ones share one overflow entry. |
 | `MCP_REFUSAL_LOG_INTERVAL_SECONDS` | `10` | How long one rate/slot-refusal coalescing window stays open. Inside it a refusal writes nothing; the row that lands stands for `1 + suppressed` refusals. |
@@ -1451,7 +1467,7 @@ fast one credential can create work.
 
 - **A general bucket** — `MCP_RATE_LIMIT_PER_MINUTE` (120) sustained,
   `MCP_RATE_LIMIT_BURST` (30) capacity — on every tool call.
-- **A write bucket** — 60/min, burst 15 — that the eight default vault-mutating
+- **A write bucket** — 60/min, burst 15 — that the nine default vault-mutating
   tools must pass in addition, and that `PUT /transfer/upload` consumes
   too, charged to the principal that **minted** the capability so the
   write rate cannot be escaped by minting links and redeeming them.
@@ -1561,7 +1577,7 @@ adds a writer wait or drops a usage row because of its observed pressure.
 │ MCP clients  │   HTTP + Bearer key   │   FastAPI app        │
 │  Claude Desk │ ────────────────────▶ │  ┌────────────────┐  │
 │  Claude Code │                       │  │  MCP server    │  │
-│  n8n agents  │                       │  │  (25 tools)    │  │
+│  n8n agents  │                       │  │  (26 tools)    │  │
 │  OpenWebUI   │                       │  └─────┬──────────┘  │
 └──────────────┘                       │        ▼             │
                                        │  ┌────────────────┐  │

@@ -378,7 +378,7 @@ update it in the same change.** What stays here is the short list:
 
 ## MCP tools
 
-25 default tools (plus opt-in `inspect_chatgpt_file` and `import_chatgpt_image`), all registered in `src/mcp_server/server.py` and all wrapped by
+26 default tools (plus opt-in `inspect_chatgpt_file` and `import_chatgpt_image`), all registered in `src/mcp_server/server.py` and all wrapped by
 `_tracked`, which resolves the caller's vault root *before* the tool body runs
 — that decorator is the whole enforcement of "this user has no vault"
 ([vault roots and tenancy](docs/architecture/vault-roots-and-tenancy.md)).
@@ -403,7 +403,9 @@ destructive-write surface: read
 
 **Raw files (non-markdown)** — `read_file`, `write_file`, `list_files`,
 `delete_file`. Pure byte transport, same traversal and dot-dir guards, no
-indexing.
+indexing. `delete_empty_folder_tree` separately removes selected directory-only
+trees through kernel-enforced empty-directory removal; never file content.
+See [vault tools](docs/architecture/vault-tools.md#empty-folder-trees).
 
 **Transfer** — `request_upload`, `check_upload`, `request_download`,
 `import_from_url`, plus the public `/transfer/*` routes. A capability pins

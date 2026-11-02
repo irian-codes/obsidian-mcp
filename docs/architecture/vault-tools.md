@@ -43,7 +43,7 @@ The configured embedding provider does not expand a search's vault domain.
 
 `create_note` is an additive write because it refuses an existing destination.
 `edit_note`, `move_note`, `delete_note`, `set_frontmatter`, `write_file` and
-`delete_file` are potentially destructive writes. Classify the whole supported
+`delete_file` and `delete_empty_folder_tree` are potentially destructive writes. Classify the whole supported
 operation, including overwrite, link rewriting and permanent deletion, rather
 than only its defaults or `dry_run` mode. These tools remain closed-world.
 Transfer classifications and their durable capability state are described in
@@ -101,6 +101,33 @@ configure the map, recreate only the selected MCP service and refresh client
 metadata before relying on the guide. Canonical reusable guidance/templates and
 selected production adoption are separate integration changes. Historical
 primer text remains recoverable in Git; it is no longer shipped automatically.
+
+## Empty folder trees
+
+`delete_empty_folder_tree(path)` is an explicit cleanup tool, separate from
+file/note deletion. `src/services/empty_folders.py` preflights at most 1,000
+directories before any mutation and refuses every file, hidden entry, symlink
+or unreadable directory. It records device/inode identities, then removes the
+plan in reverse preorder through fresh beneath-root parent descriptors. The
+selected folder is included; ancestors, siblings and the vault root are not.
+
+Only `rmdir` removes entries. Even a mistaken preflight or a file arriving at
+the last moment cannot turn this operation into file deletion: the kernel
+requires the directory to be empty. No recursive file removal, unlink, trash
+rename or automatic pruning is used. Empty directories are permanently
+removed; file/note trash behavior is unchanged. File hash preconditions do not
+apply because the tool cannot remove file bytes. Ordinary write permission,
+rate buckets, write concurrency classification and vault admission do apply.
+
+Each directory removal consumes its own fresh root confirmation in one
+synchronous step. Completion reports a count; a later refusal reports a typed
+partial outcome with count and stopping point, without `nothing_written`.
+A retry freshly preflights what remains; an absent selection is a successful
+no-op. The tree is not an atomic snapshot or transaction. Identity checks are
+optimistic: an empty replacement swapped after the check can still be removed.
+The existing D26 post-lookup parent-rename limitation and optimistic root
+confirmation window remain; neither permits rmdir to delete nonempty content.
+Successful removals use the existing quiet directory flush/close policy.
 
 ## Unknown arguments are refused (#295)
 

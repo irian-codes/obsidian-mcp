@@ -1469,6 +1469,29 @@ def _impl_for(tool) -> object | None:
     return None
 
 
+@pytest.mark.parametrize("change", ["before", "between", "never"])
+async def test_empty_tree_checks_actual_assignment_before_each_removal(multi_user_vault, change):
+    ctx = multi_user_vault
+    (ctx.vault / "Old/Child").mkdir(parents=True)
+    if change == "before":
+        ctx.assignment["row"] = _UserRow(str(ctx.other), True)
+    elif change == "between":
+        ctx.assignment["flip_after"] = 1
+        ctx.assignment["flip_to"] = _UserRow(str(ctx.other), True)
+    result = await tools.delete_empty_folder_tree_impl("Old")
+    if change == "never":
+        assert "2 empty directories" in result
+        assert ctx.assignment["reads"] == 2
+        assert not (ctx.vault / "Old").exists()
+    else:
+        assert result.refusal.code == "vault_assignment_changed"
+        assert result.disposition == ("partial" if change == "between" else "refused")
+        assert (ctx.vault / "Old").is_dir()
+        assert (ctx.vault / "Old/Child").exists() is (change == "before")
+        assert ctx.assignment["reads"] == (2 if change == "between" else 1)
+    assert not list(ctx.other.iterdir())
+
+
 def test_the_registry_is_not_empty():
     assert len(mcp._tool_manager.list_tools()) >= 25
 

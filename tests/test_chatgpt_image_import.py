@@ -243,7 +243,7 @@ async def test_flags_schema_metadata_and_safe_validation(monkeypatch, probe_enab
     listed = {tool.name: tool for tool in await module.mcp.list_tools()}
     assert ("import_chatgpt_image" in listed) is import_enabled
     assert ("inspect_chatgpt_file" in listed) is probe_enabled
-    assert len(listed) == 25 + probe_enabled + import_enabled
+    assert len(listed) == 26 + probe_enabled + import_enabled
     assert bool(installed) is (probe_enabled or import_enabled)
     if import_enabled:
         tool = listed["import_chatgpt_image"]

@@ -29,7 +29,7 @@ READ_ONLY = {
 ADDITIVE = {"create_note", "request_download"}
 DESTRUCTIVE = {
     "edit_note", "move_note", "delete_note", "set_frontmatter", "write_file",
-    "delete_file", "request_upload", "import_from_url",
+    "delete_file", "delete_empty_folder_tree", "request_upload", "import_from_url",
 }
 
 

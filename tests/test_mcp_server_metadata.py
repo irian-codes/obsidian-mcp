@@ -124,6 +124,7 @@ WRITE_PARAMETERS = {
     "delete_note": {"path", "permanent", "expected_hash"},
     "write_file": {"path", "content", "encoding", "overwrite", "expected_hash"},
     "delete_file": {"path", "permanent", "expected_hash"},
+    "delete_empty_folder_tree": {"path"},
 }
 
 

@@ -252,7 +252,7 @@ def test_registry_covers_exactly_the_five_classes():
     assert concurrency.CLASSES == {'embedding', 'vector', 'write', 'scan', 'light'}
     assert set(concurrency.TOOL_CLASSES.values()) == concurrency.CLASSES
     assert 'other' not in concurrency.TOOL_CLASSES.values()
-    assert len(concurrency.TOOL_CLASSES) == 25
+    assert len(concurrency.TOOL_CLASSES) == 28  # includes both opt-in native-file tools
 
 
 @tools._tracked('read_note', [])

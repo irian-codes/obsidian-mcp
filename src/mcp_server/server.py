@@ -14,6 +14,7 @@ from src.mcp_server.read_result import ReadNoteResult
 from src.mcp_server.tools import (
     check_upload_impl,
     create_note_impl,
+    delete_empty_folder_tree_impl,
     delete_file_impl,
     delete_note_impl,
     edit_note_impl,
@@ -1585,6 +1586,35 @@ async def delete_file(
         expected_hash: Optional whole-file raw-byte digest of the incumbent.
     """
     return await delete_file_impl(path, permanent=permanent, expected_hash=expected_hash)
+
+
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=False, destructiveHint=True, openWorldHint=False
+    )
+)
+async def delete_empty_folder_tree(
+    path: Annotated[
+        str,
+        Field(description="Vault-relative folder to remove with all descendants, only when the entire tree contains directories and no files."),
+    ],
+) -> str:
+    """Permanently remove a selected empty folder tree. Requires write permission.
+
+    Preflights the whole tree before mutation; refuses files (including hidden
+    files), hidden directories, symlinks, unsafe paths and trees exceeding
+    1,000 directories. Never removes the vault root, ancestors or siblings.
+    Only rmdir is used: the filesystem refuses any directory that gains content
+    after preflight. No file deletion, trash entry or automatic pruning occurs.
+
+    The operation is not atomic. Concurrent changes or permission/assignment
+    failures may stop cleanup after some empty directories were removed; the
+    response reports that count and the stopping point. Inspect before retrying.
+    Retrying rechecks the current tree; an already absent selection is a no-op.
+    Directory identity checks are optimistic, as with existing file operations.
+    No file hash or permanent toggle applies because no file bytes are deleted.
+    """
+    return await delete_empty_folder_tree_impl(path)
 
 
 if settings.chatgpt_file_probe_enabled or settings.chatgpt_image_import_enabled:

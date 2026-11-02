@@ -60,7 +60,7 @@ from src.mcp_server.read_result import (
     screen_unrenderable,
 )
 from src.models.db import UsageLog
-from src.services import concurrency, rate_limits, refusals, security_events, timing
+from src.services import concurrency, empty_folders, rate_limits, refusals, security_events, timing
 from src.services.tool_outcomes import BodyOutcome, body_refusal as _body_refusal
 from src.services.embeddings import semantic_search
 from src.services.filters import apply_note_filters
@@ -7034,6 +7034,76 @@ async def inspect_chatgpt_file_impl(file, zip_member_index: int | None = None) -
     from src.services.chatgpt_file_probe import inspect_file
 
     return await inspect_file(file, zip_member_index)
+
+
+@_tracked("delete_empty_folder_tree", ["path"], write_class=True)
+async def delete_empty_folder_tree_impl(path: str) -> str:
+    """Permanently remove only directories, after a complete empty-tree check."""
+    if err := _require_write():
+        return err
+    uid = current_user_id.get()
+    try:
+        root, rel = _vault_context(path, uid)
+    except (ValueError, RuntimeError) as exc:
+        return _body_refusal(str(exc), "validation_failed")
+
+    removed = 0
+    stopping_at = rel
+    root_fd = None
+
+    def failure(message, code):
+        progress = f"Removed {removed} directories from {rel}. Stopped at {stopping_at}. "
+        return _body_refusal(
+            progress + message + " Inspect the selected tree before retrying.", code,
+            disposition="partial" if removed else "refused",
+        )
+
+    try:
+        root_fd = vault_fs.open_root(root)
+        plan = empty_folders.plan_empty_tree(root_fd, rel)
+        if not plan:
+            return f"Folder tree {rel} is already absent. Removed 0 directories."
+        for directory in reversed(plan):
+            stopping_at = directory.path
+
+            def remove(confirmation):
+                nonlocal removed
+                confirmation.consume(uid, root, f"remove empty directory {directory.path}")
+                empty_folders.remove_empty_directory(root_fd, directory)
+                removed += 1
+
+            # One fresh confirmation per rmdir, never one confirmation held
+            # across the entire tree or an await between confirmation/removal.
+            err, _ = await _confirmed_publication(uid, remove)
+            if err:
+                return BodyOutcome(
+                    f"Removed {removed} directories from {rel}. Stopped at {stopping_at}. "
+                    + err.prose + " Inspect the selected tree before retrying.",
+                    err.refusal, marker=err.marker,
+                    disposition="partial" if removed else "refused",
+                )
+    except empty_folders.TreeNotEmpty as exc:
+        return failure(str(exc), "invalid_argument")
+    except empty_folders.TreeTooLarge as exc:
+        return failure(str(exc), "size_limit")
+    except vault_fs.UnsafePath as exc:
+        return failure(str(exc), "unsafe_path")
+    except vault_fs.UnsupportedFilesystem as exc:
+        return failure(str(exc), "unsupported_filesystem")
+    except (vault_fs.Conflict, FileNotFoundError) as exc:
+        return failure(str(exc), "concurrent_write")
+    except OSError as exc:
+        return failure(f"Directory removal refused ({exc.strerror or 'filesystem error'}).", "io_failure")
+    except Exception:
+        if not removed:
+            raise
+        # A later root-confirmation/DB failure cannot erase earlier removals
+        # from the reported outcome or invite blind replay as a total failure.
+        return failure("A later cleanup step failed.", "partial_completion")
+    finally:
+        if root_fd is not None:
+            vault_fs.close_quietly(root_fd, f"vault root for empty-tree cleanup {rel}")
+    return f"Permanently removed {removed} empty directories, including {rel}. No files were deleted."
 
 
 @_tracked("delete_file", ["path", "permanent", "expected_hash"], write_class=True)

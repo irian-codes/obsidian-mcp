@@ -916,6 +916,8 @@ wrong folder. Bare-date filenames collide with templates. Wrong tags
 break Dataview queries. The data layer works fine; the context layer
 is where the failures show up.
 
+The operator-maintained **Obsidian MCP integration** repository owns the reusable policy package at `guidance/README.md`, including shared guides and reconciled vault templates. Locate that checkout through the deployment inventory. This server owns delivery and tool behavior; it does not carry a second copy of those policies. Install shared updates deliberately while preserving each vault's specific rules.
+
 Keep instructions in vault files and configure their assembly in the deployment's
 `VAULT_GUIDE_CONFIG` JSON environment setting. A minimal synthetic example:
 
